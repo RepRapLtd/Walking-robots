@@ -2,7 +2,7 @@
 
   (general
     (thickness 1.6)
-    (drawings 0)
+    (drawings 4)
     (tracks 24)
     (zones 0)
     (modules 6)
@@ -34,7 +34,7 @@
   )
 
   (setup
-    (last_trace_width 1)
+    (last_trace_width 0.25)
     (user_trace_width 1)
     (trace_clearance 0.2)
     (zone_clearance 0.508)
@@ -63,7 +63,7 @@
     (aux_axis_origin 0 0)
     (visible_elements FFFFFF7F)
     (pcbplotparams
-      (layerselection 0x010fc_ffffffff)
+      (layerselection 0x01000_fffffffe)
       (usegerberextensions false)
       (usegerberattributes false)
       (usegerberadvancedattributes false)
@@ -86,9 +86,9 @@
       (subtractmaskfromsilk false)
       (outputformat 1)
       (mirror false)
-      (drillshape 1)
+      (drillshape 0)
       (scaleselection 1)
-      (outputdirectory ""))
+      (outputdirectory "GERBER/"))
   )
 
   (net 0 "")
@@ -325,6 +325,11 @@
     )
     (pad 1 np_thru_hole circle (at 0 0) (size 2.5 2.5) (drill 2.5) (layers *.Cu *.Mask))
   )
+
+  (gr_line (start 146 -11) (end 146 -31) (layer Edge.Cuts) (width 0.05) (tstamp 620E34D6))
+  (gr_line (start 172 -11) (end 146 -11) (layer Edge.Cuts) (width 0.05))
+  (gr_line (start 172 -31) (end 172 -11) (layer Edge.Cuts) (width 0.05))
+  (gr_line (start 146 -31) (end 172 -31) (layer Edge.Cuts) (width 0.05))
 
   (segment (start 163.62 -29) (end 162.62 -28) (width 1) (layer B.Cu) (net 1))
   (segment (start 168 -29) (end 163.62 -29) (width 1) (layer B.Cu) (net 1))

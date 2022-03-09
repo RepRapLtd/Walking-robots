@@ -2,8 +2,8 @@
 
   (general
     (thickness 1.6)
-    (drawings 0)
-    (tracks 19)
+    (drawings 4)
+    (tracks 24)
     (zones 0)
     (modules 6)
     (nets 7)
@@ -34,7 +34,7 @@
   )
 
   (setup
-    (last_trace_width 1)
+    (last_trace_width 0.25)
     (user_trace_width 1)
     (trace_clearance 0.2)
     (zone_clearance 0.508)
@@ -326,15 +326,22 @@
     (pad 1 np_thru_hole circle (at 0 0) (size 2.5 2.5) (drill 2.5) (layers *.Cu *.Mask))
   )
 
-  (segment (start 167 -28) (end 168 -29) (width 1) (layer B.Cu) (net 1))
-  (segment (start 162.62 -28) (end 167 -28) (width 1) (layer B.Cu) (net 1))
+  (gr_line (start 146 -11) (end 146 -31) (layer Edge.Cuts) (width 0.05) (tstamp 620E34D6))
+  (gr_line (start 172 -11) (end 146 -11) (layer Edge.Cuts) (width 0.05))
+  (gr_line (start 172 -31) (end 172 -11) (layer Edge.Cuts) (width 0.05))
+  (gr_line (start 146 -31) (end 172 -31) (layer Edge.Cuts) (width 0.05))
+
+  (segment (start 163.62 -29) (end 162.62 -28) (width 1) (layer B.Cu) (net 1))
+  (segment (start 168 -29) (end 163.62 -29) (width 1) (layer B.Cu) (net 1))
   (segment (start 153.92 -24) (end 155 -22.92) (width 1) (layer B.Cu) (net 2))
   (segment (start 149 -24) (end 153.92 -24) (width 1) (layer B.Cu) (net 2))
   (segment (start 155 -12.92) (end 153 -14.92) (width 1) (layer B.Cu) (net 2))
   (segment (start 153 -20.92) (end 155 -22.92) (width 1) (layer B.Cu) (net 2))
   (segment (start 153 -14.92) (end 153 -20.92) (width 1) (layer B.Cu) (net 2))
-  (segment (start 164.46 -22.92) (end 168 -26.46) (width 1) (layer B.Cu) (net 3))
-  (segment (start 162.62 -22.92) (end 164.46 -22.92) (width 1) (layer B.Cu) (net 3))
+  (segment (start 166.797919 -26.46) (end 166.753919 -26.416) (width 1) (layer B.Cu) (net 3))
+  (segment (start 168 -26.46) (end 166.797919 -26.46) (width 1) (layer B.Cu) (net 3))
+  (segment (start 166.116 -26.416) (end 162.62 -22.92) (width 1) (layer B.Cu) (net 3))
+  (segment (start 166.753919 -26.416) (end 166.116 -26.416) (width 1) (layer B.Cu) (net 3))
   (segment (start 153.54 -26.54) (end 155 -28) (width 1) (layer B.Cu) (net 4))
   (segment (start 149 -26.54) (end 153.54 -26.54) (width 1) (layer B.Cu) (net 4))
   (segment (start 155 -18) (end 159 -22) (width 1) (layer B.Cu) (net 4))
@@ -343,7 +350,10 @@
   (segment (start 165.02 -18.4) (end 168 -21.38) (width 1) (layer B.Cu) (net 5))
   (segment (start 165.02 -15.32) (end 165.02 -18.4) (width 1) (layer B.Cu) (net 5))
   (segment (start 162.62 -12.92) (end 165.02 -15.32) (width 1) (layer B.Cu) (net 5))
-  (segment (start 162.62 -18.54) (end 168 -23.92) (width 1) (layer B.Cu) (net 6))
   (segment (start 162.62 -18) (end 162.62 -18.54) (width 1) (layer B.Cu) (net 6))
+  (segment (start 168 -23.92) (end 166.414 -23.92) (width 1) (layer B.Cu) (net 6))
+  (segment (start 165.227 -22.733) (end 165.227 -21.463) (width 1) (layer B.Cu) (net 6))
+  (segment (start 166.414 -23.92) (end 165.227 -22.733) (width 1) (layer B.Cu) (net 6))
+  (segment (start 162.62 -18.54) (end 165.227 -21.463) (width 1) (layer B.Cu) (net 6))
 
 )
