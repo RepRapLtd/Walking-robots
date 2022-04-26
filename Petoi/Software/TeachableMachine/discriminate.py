@@ -30,16 +30,35 @@ model = load_model('keras_model.h5', compile=False)
 # Create the array of the right shape to feed into the keras model
 # The 'length' or number of images you can put into the array is
 # determined by the first position in the shape tuple, in this case 1.
-data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+data1 = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 # Replace this with the path to your image
 
 # Load the image into the array
-data[0] = GetImage('ab-test2.jpg')
+data1[0] = GetImage('ab-test2.jpg')
+
+data2 = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+# Replace this with the path to your image
+
+# Load the image into the array
+data2[0] = GetImage('ab-test1.jpg')
 
 start_time = time.time()
 # run the inference
-prediction = model.predict(data)
+prediction = model.predict(data2)
 end_time = time.time()
+print(prediction)
+print("--- %s seconds ---" % (end_time - start_time))
 
+start_time = time.time()
+# run the inference
+prediction = model.predict(data1)
+end_time = time.time()
+print(prediction)
+print("--- %s seconds ---" % (end_time - start_time))
+
+start_time = time.time()
+# run the inference
+prediction = model.predict(data2)
+end_time = time.time()
 print(prediction)
 print("--- %s seconds ---" % (end_time - start_time))
