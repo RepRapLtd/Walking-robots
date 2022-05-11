@@ -59,12 +59,12 @@ F 3 "~" H 3050 1350 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	2850 1250 2300 1250
+	2850 1250 2500 1250
 Connection ~ 2300 1250
 Wire Wire Line
 	2300 1250 2300 1800
 Wire Wire Line
-	2850 1350 1450 1350
+	2850 1350 2800 1350
 Connection ~ 1450 1350
 Wire Wire Line
 	1450 1350 1450 1800
@@ -453,4 +453,25 @@ Wire Wire Line
 Wire Wire Line
 	6100 1275 6225 1275
 Connection ~ 5975 1475
+$Comp
+L Device:C C4
+U 1 1 627BBE63
+P 2650 1500
+F 0 "C4" H 2765 1546 50  0000 L CNN
+F 1 "1u" H 2765 1455 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 2688 1350 50  0001 C CNN
+F 3 "~" H 2650 1500 50  0001 C CNN
+	1    2650 1500
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2800 1500 2800 1350
+Connection ~ 2800 1350
+Wire Wire Line
+	2800 1350 1450 1350
+Wire Wire Line
+	2500 1500 2500 1250
+Connection ~ 2500 1250
+Wire Wire Line
+	2500 1250 2300 1250
 $EndSCHEMATC
