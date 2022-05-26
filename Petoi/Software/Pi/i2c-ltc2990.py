@@ -21,6 +21,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+#
+#--------------------------------------------------------
+#
+# Updated to Python3
+#
+# Adrian Bowyer
+# RepRap Ltd
+# https://reprapltd.com
+#
+# 26 May 2022
+#
 
 import smbus
 import time
@@ -36,8 +47,8 @@ try:
     bus.write_byte_data(address, 0x01, mode)    # Initializes the IC and set mode
     bus.write_byte_data(address, 0x02, 0x00)    # Trigger a initial data collection
     time.sleep(1)				# Wait a sec, just for init
-except IOError, err:
-  print err
+except (IOError, err):
+  print(err)
 
 bus.write_byte_data(address, 0x02, 0x00) # Trigger a data collection
 
@@ -79,11 +90,11 @@ def voltage(msb,lsb):
   return volt
 
 
-print "Int. Temp. : %s Celsius" %temperature(r4,r5)
-print "Voltage V1 : %s V" %voltage(r6,r7)
-print "Voltage V2 : %s V" %voltage(r8,r9)
-print "Voltage V3 : %s V" %voltage(ra,rb)
-print "Voltage V4 : %s V" %voltage(rc,rd)
+print("Int. Temp. : " + str(temperature(r4,r5)) + " Celsius")
+print("Voltage V1 : " + str(voltage(r6,r7)) + " V")
+print("Voltage V1 : " + str(voltage(r8,r9)) + " V")
+print("Voltage V1 : " + str(voltage(ra,rb)) + " V")
+print("Voltage V1 : " + str(voltage(rc,rd)) + " V")
 
 # If you want to use TR, use the temperature(msb,lsb) function to get the
 # value. I.e., if you have set the mode TR1 & TR2 (mode 0x5d),
@@ -96,4 +107,4 @@ print "Voltage V4 : %s V" %voltage(rc,rd)
 
 # And print the supply voltage:
 vin = voltage(re,rf) + 2.5
-print "Vin        : %s V" %vin
+print("Supply: " + str(vin) + " V")
