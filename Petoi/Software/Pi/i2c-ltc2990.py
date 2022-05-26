@@ -92,9 +92,9 @@ def voltage(msb,lsb):
 
 print("Int. Temp. : " + str(temperature(r4,r5)) + " Celsius")
 print("Voltage V1 : " + str(voltage(r6,r7)) + " V")
-print("Voltage V1 : " + str(voltage(r8,r9)) + " V")
-print("Voltage V1 : " + str(voltage(ra,rb)) + " V")
-print("Voltage V1 : " + str(voltage(rc,rd)) + " V")
+print("Voltage V2 : " + str(voltage(r8,r9)) + " V")
+print("Voltage V3 : " + str(voltage(ra,rb)) + " V")
+print("Voltage V4 : " + str(voltage(rc,rd)) + " V")
 
 # If you want to use TR, use the temperature(msb,lsb) function to get the
 # value. I.e., if you have set the mode TR1 & TR2 (mode 0x5d),
