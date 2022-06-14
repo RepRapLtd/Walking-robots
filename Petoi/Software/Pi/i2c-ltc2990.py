@@ -108,3 +108,10 @@ print("Voltage V4 : " + str(voltage(rc,rd)) + " V")
 # And print the supply voltage:
 vin = voltage(re,rf) + 2.5
 print("Supply: " + str(vin) + " V")
+for i in range(1,60):
+ bus.write_byte_data(address, 0x02, 0x00) # Trigger a data collection
+ r6 = bus.read_byte_data(address, 0x06) # V1, V1 - V2 or TR1 MSB
+ r7 = bus.read_byte_data(address, 0x07) # V1, V1 - V2 or TR1 LSB
+ print("Voltage V1 : " + str(voltage(r6,r7)) + " V")
+ time.sleep(1)
+
