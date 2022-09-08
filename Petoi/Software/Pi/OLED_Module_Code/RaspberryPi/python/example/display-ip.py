@@ -1,4 +1,4 @@
-
+import socket
 import sys
 import os
 picdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'pic')
@@ -6,21 +6,21 @@ libdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__)
 if os.path.exists(libdir):
     sys.path.append(libdir)
 
-import logging    
-import time
+#import logging    
+#import time
 import traceback
 from waveshare_OLED import OLED_0in91
 from PIL import Image,ImageDraw,ImageFont
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 try:
     disp = OLED_0in91.OLED_0in91()
-    logging.info("\r 0.91inch OLED Module ")
+    #logging.info("\r 0.91inch OLED Module ")
     # Initialize library.
     disp.Init()
         
     # Clear display.
-    logging.info("clear display")
+    #logging.info("clear display")
     disp.clear()
 
     # Create blank image for drawing.
@@ -33,12 +33,16 @@ try:
     #draw.line([(0,0),(0,31)], fill = 0)
     #draw.line([(0,31),(127,31)], fill = 0)
     #draw.line([(127,0),(127,31)], fill = 0)
-    logging.info ("***draw text")
-    draw.text((20,0), 'Test string ', font = font1, fill = 0)
+    #Get IP
+    host_name = socket.gethostname()
+    ip = "IP: " + socket.gethostbyname(host_name + ".local")
+    #print("IP: " + ip)
+    #logging.info ("***draw text")
+    draw.text((20,0), ip, font = font1, fill = 0)
     #draw.text((20,12), u'微雪电子 ', font = font2, fill = 0)
     image1=image1.rotate(0) 
     disp.ShowImage(disp.getbuffer(image1))
-    time.sleep(3)
+    #time.sleep(3)
     
     #logging.info ("***draw image")
     #Himage2 = Image.new('1', (disp.width, disp.height), 255)  # 255: clear the frame
@@ -46,13 +50,13 @@ try:
     #Himage2.paste(bmp, (0,0))
     #Himage2=Himage2.rotate(0) 	
     #disp.ShowImage(disp.getbuffer(Himage2))  
-    time.sleep(3)
+    #time.sleep(3)
     #disp.clear()
 
 except IOError as e:
     logging.info(e)
     
 except KeyboardInterrupt:    
-    logging.info("ctrl + c:")
+    #logging.info("ctrl + c:")
     OLED_0in91.config.module_exit()
     exit()

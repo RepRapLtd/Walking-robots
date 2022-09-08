@@ -2,3 +2,10 @@ Read voltages: python3 i2c-ltc2990.py
 Display: .../OLED_Module_Code/RaspberryPi/python/example $ python3 OLED_0in91_test.py
 Range: .../VL53L0X-python/python $ python3 VL53L0X_example.py
 Camera: .../Camera $ python3 camera.py
+
+In /etc/rc.local:
+
+sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/OLED_Module_Code/RaspberryPi/python/example/display-ip.py > /dev/null &
+
+
+
