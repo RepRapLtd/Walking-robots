@@ -1,4 +1,7 @@
 
+# https://teachablemachine.withgoogle.com/
+
+
 # Supress warnings about no GPU libraries
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
