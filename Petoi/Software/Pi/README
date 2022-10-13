@@ -1,6 +1,16 @@
 Read voltages: python3 i2c-ltc2990.py
+
 Display: .../OLED_Module_Code/RaspberryPi/python/example $ python3 OLED_0in91_test.py
-Range: .../VL53L0X-python/python $ python3 VL53L0X_example.py
+
+Range:
+
+$ pip3 install git+https://github.com/pimoroni/VL53L0X-python.git
+$ cd VL53L0X-python
+$ make
+$ cd python
+$ python3 VL53L0X_example.py
+
+
 Camera: .../Camera $ python3 camera.py
 
 In /etc/rc.local:
