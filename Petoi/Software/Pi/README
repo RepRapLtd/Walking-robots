@@ -19,3 +19,32 @@ sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/OLED_Module_Code/Raspberr
 
 
 
+sudo i2cdetect -y 1
+
+gives
+
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- 29 -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- 3c -- -- -- 
+40: 40 -- -- -- -- -- -- -- -- -- -- -- 4c -- -- -- 
+50: -- -- -- -- 54 -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- 68 -- -- -- -- -- -- -- 
+70: 70 -- -- -- -- -- -- 77
+
+For the Petoi chip addresses start at https://docs.petoi.com/nyboard/nyboard-v1_1 
+Petoi Nyboard-v1_1 devices are those with * below.
+
+29: VL53L0X rangefinder
+3c: OLED_0in91 display
+40: * PCA9685 PWM generator 
+4c: i2c-ltc2990 A->D converter
+54: * AT24C64 EEPROM
+68: * MPU6050 accelerometer
+70:
+77:
+  
+
+
+
