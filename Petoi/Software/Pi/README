@@ -45,6 +45,9 @@ Petoi Nyboard-v1_1 devices are those with * below.
 70:
 77:
   
+Servos:
 
+$ sudo pip3 install adafruit-circuitpython-servokit
+$ python3 servo_test.py
 
 
