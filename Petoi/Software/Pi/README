@@ -1,23 +1,6 @@
-Read voltages: python3 i2c-ltc2990.py
 
-Display: .../OLED_Module_Code/RaspberryPi/python/example $ python3 OLED_0in91_test.py
-
-Range:
-
-$ pip3 install git+https://github.com/pimoroni/VL53L0X-python.git
-$ cd VL53L0X-python
-$ make
-$ cd python
-$ python3 VL53L0X_example.py
-
-
-Camera: .../Camera $ python3 camera.py
-
-In /etc/rc.local:
-
-sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/OLED_Module_Code/RaspberryPi/python/example/display-ip.py > /dev/null &
-
-
+What I2C devices do we have?
+============================
 
 sudo i2cdetect -y 1
 
@@ -44,7 +27,49 @@ Petoi Nyboard-v1_1 devices are those with * below.
 68: * MPU6050 accelerometer
 70:
 77:
-  
+
+
+Arduino addresses and other useful stuff from OpenCat.h
+=======================================================
+ 
+ 
+These are for NyBoard_V1_0
+
+#define IR_PIN    4   // Signal Pin of IR receiver to Arduino Digital Pin 4
+#define BUZZER    5
+
+#define SOUND A2
+#define LIGHT A3
+
+#define VOLTAGE_DETECTION_PIN A7
+#define LOW_VOLTAGE 650
+#define DEVICE_ADDRESS 0x54       //I2C Address of eeprom chip !!! Why 54 above??? 
+#define BAUD_RATE 115200
+#define NEOPIXEL_PIN 10 //the code for NeoPixels have to be shrinked to fit in the board
+#define NUMPIXELS 7
+
+
+Test programs
+=============
+
+Read voltages: python3 i2c-ltc2990.py
+
+Display: .../OLED_Module_Code/RaspberryPi/python/example $ python3 OLED_0in91_test.py
+
+Range:
+
+$ pip3 install git+https://github.com/pimoroni/VL53L0X-python.git
+$ cd VL53L0X-python
+$ make
+$ cd python
+$ python3 VL53L0X_example.py
+
+
+Camera: 
+
+$ cd Camera
+$ python3 camera.py
+
 Servos:
 
 $ sudo pip3 install adafruit-circuitpython-servokit
@@ -54,3 +79,12 @@ Accelerometer:
 
 $ sudo pip3 install adafruit-circuitpython-mpu6050
 $ python3 accelerometer_test.py
+
+
+Report IP address on OLED display
+=================================
+
+In /etc/rc.local:
+
+sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/OLED_Module_Code/RaspberryPi/python/example/display-ip.py > /dev/null &
+
