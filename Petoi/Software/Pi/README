@@ -50,4 +50,7 @@ Servos:
 $ sudo pip3 install adafruit-circuitpython-servokit
 $ python3 servo_test.py
 
+Accelerometer:
 
+$ sudo pip3 install adafruit-circuitpython-mpu6050
+$ python3 accelerometer_test.py
