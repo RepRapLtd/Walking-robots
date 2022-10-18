@@ -1,13 +1,13 @@
 import time
 import sys
-#from adafruit_servokit import ServoKit
-#kit = ServoKit(channels=16)
+from adafruit_servokit import ServoKit
+kit = ServoKit(channels=16)
 
 servoCount = 16
 angle = [0]* servoCount
 
 def SetAngle(servo, a):
-#    kit.servo[servo].angle = angle
+    kit.servo[servo].angle = a
     angle[servo] = a
 
 def Prompt():
