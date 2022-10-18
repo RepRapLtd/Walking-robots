@@ -22,7 +22,6 @@ try:
     image1 = Image.new('1', (disp.width, disp.height), "WHITE")
     draw = ImageDraw.Draw(image1)
     font1 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 12)
-    font2 = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 18)
     #Get IP
     host_name = socket.gethostname()
     ip = "IP: " + socket.gethostbyname(host_name + ".local")
