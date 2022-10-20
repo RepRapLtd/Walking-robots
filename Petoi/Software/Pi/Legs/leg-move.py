@@ -78,7 +78,7 @@ def Prompt():
     print(" d - set servo direction")
     print(" q - quit")
 
-def GoToPoint(p)
+def GoToPoint(p):
  p = (l1 + l2 - p[1], p[0])
  angles = AnglesFromPosition(p)
  if angles[0]:
@@ -89,7 +89,7 @@ def GoToPoint(p)
   print("No can do")
   
 def GetPoint():
- a = (direction[shoulder]*angle[shoulder]*maths.pi/180.0, direction[forearm]*angle[forearm]*maths.pi/180.0)
+ a = (direction[shoulder]*angle[shoulder]*maths.pi/180.0, direction[foreleg]*angle[foreleg]*maths.pi/180.0)
  p = PositionFromAngles(a)
  p = (p[1] - l1 - l2, p[0])
  return p
