@@ -64,8 +64,8 @@ def LoadZeros():
 # degrees
 
 def SetAngle(servo, a):
-    a = a + angleOffsets[servo]
-    kit.servo[servo].angle = a
+    a1 = direction[servo]*a + angleOffsets[servo]
+    kit.servo[servo].angle = a1
     angle[servo] = a
 
 def Prompt():
@@ -78,21 +78,34 @@ def Prompt():
     print(" d - set servo direction")
     print(" q - quit")
 
+def ToDegrees(a):
+ return (a[0]*180.0/maths.pi, a[1]*180.0/maths.pi)
+
+def ToRadians(a):
+ return (a[0]*maths.pi/180.0, a[1]*maths.pi/180.0)
+
+def RobotToLegCoordinates(p):
+ return (l1 + l2 - p[1], p[0])
+
+def LegToRobotCoordinates(p):
+ return (p[1], l1 + l2 - p[0])
+
 def GoToPoint(p):
- p = (l1 + l2 - p[1], p[0])
+ p = RobotToLegCoordinates(p)
+ #print("To: " + str(p))
  angles = AnglesFromPosition(p)
  if angles[0]:
-  a = angles[1]
-  SetAngle(shoulder, direction[shoulder]*a[0]*180.0/maths.pi)
-  SetAngle(foreleg, direction[foreleg]*a[1]*180.0/maths.pi) 
+  a = ToDegrees(angles[2])
+  #print("Angles: " + str(a[0]) + " " + str(a[1]))
+  SetAngle(shoulder, a[0])
+  SetAngle(foreleg, a[1]) 
  else:
   print("No can do")
   
 def GetPoint():
- a = (direction[shoulder]*angle[shoulder]*maths.pi/180.0, direction[foreleg]*angle[foreleg]*maths.pi/180.0)
+ a = ToRadians((angle[shoulder], angle[foreleg]))
  p = PositionFromAngles(a)
- p = (p[1] - l1 - l2, p[0])
- return p
+ return LegToRobotCoordinates(p)
 
 
 LoadZeros() 
