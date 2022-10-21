@@ -57,6 +57,7 @@ def ToRadians(a):
 # self.angleOffsets - added to self.angle to get the angles to send to the servos
 # self.direction - +/-1 multiplies self.angle to get the servo moving the right way
 #
+# Servos work in degrees.
  
 class Servos:
 
@@ -120,6 +121,7 @@ class Servos:
 # self.p is the current foot position in robot coordinates.
 # self.step is the increment in mm used for moving in a straight line.
 #
+# Legs work in radians.
     
 class Leg:
 
