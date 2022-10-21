@@ -54,7 +54,7 @@ class Servos:
   return self.angle[servo]
   
  def Relax(self):
- for servo in range(servoCount):
+  for servo in range(servoCount):
     self.kit.servo[servo]._pwm_out.duty_cycle = 0
   
 
@@ -69,10 +69,10 @@ class Leg:
   self.l1 = humerus
   self.l2 = ulna
   
- def RobotToLegCoordinates(p):
+ def RobotToLegCoordinates(self, p):
   return (self.l1 + self.l2 - p[1], p[0])
 
- def LegToRobotCoordinates(p):
+ def LegToRobotCoordinates(self, p):
   return (p[1], self.l1 + self.l2 - p[0])
   
  # Forward kinematics; uses radians
@@ -108,7 +108,7 @@ class Leg:
 
  def GoToPoint(self, p):
   p = self.RobotToLegCoordinates(p)
-  angles = AnglesFromPosition(p)
+  angles = self.AnglesFromPosition(p)
   if angles[0]:
    a = ToDegrees(angles[2])
    self.servos.SetAngle(self.shoulder, a[0])
@@ -118,8 +118,8 @@ class Leg:
   
  def GetPoint(self):
   a = ToRadians((self.servos.Angle(self.shoulder), self.servos.Angle(self.foreleg)))
-  p = PositionFromAngles(a)
-  return LegToRobotCoordinates(p)
+  p = self.PositionFromAngles(a)
+  return self.LegToRobotCoordinates(p)
   
 def Prompt():
     print("Commands: ")
