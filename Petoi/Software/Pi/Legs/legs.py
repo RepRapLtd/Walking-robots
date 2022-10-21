@@ -211,12 +211,12 @@ class Leg:
   d = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
   if d < resolution:
    return
-  dUnit = (diff[0]/d, diff[1]/d)
   steps = int(0.5 + d/self.step)
   dStep = d/steps
-  tStep = d/v
+  dInc = (dStep*diff[0]/d, dStep*diff[1]/d)
+  tStep = dStep/v
   for s in range(steps):
-   p = (p[0] + dUnit[0]*dStep, p[1] + dUnit[1]*dStep)
+   p = (self.p[0] + dInc[0], self.p[1] + dInc[1])
    self.QuickToPoint(p)
    time.sleep(tStep)
    
@@ -273,13 +273,10 @@ while c != 'q':
     	p = input("Desired x, y position: ")
     	p = p.split(",")
     	p = (float(p[0]), float(p[1]))
-    	leg.GoToPoint(p)
-    elif:
+    	leg.QuickToPoint(p)
+    elif c == 'l':
     	p = input("Go straight tp x, y position at velocity: ")
     	p = p.split(",")
-    elif c == 'd':
-    	d = float(input("Servo " + str(servo) + " direction: "))
-    	direction[servo] = d
     	v = float(p[2])
     	p = (float(p[0]), float(p[1]))
     	leg.StraightToPoint(p, v)
