@@ -43,7 +43,7 @@ These are for NyBoard_V1_0
 
 #define VOLTAGE_DETECTION_PIN A7
 #define LOW_VOLTAGE 650
-#define DEVICE_ADDRESS 0x54       //I2C Address of eeprom chip !!! Why 54 above??? 
+#define DEVICE_ADDRESS 0x54       //I2C Address of eeprom chip
 #define BAUD_RATE 115200
 #define NEOPIXEL_PIN 10 //the code for NeoPixels have to be shrinked to fit in the board
 #define NUMPIXELS 7
