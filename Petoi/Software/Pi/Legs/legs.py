@@ -89,7 +89,7 @@ class Servos:
 # Move the servos to their zero positions
 #     
      
- def GoToZeros():
+ def GoToZeros(self):
   for servo in range(servoCount):
    self.angle[servo] = 0.0
    if self.angleOffsets[servo] < 0.0:
@@ -241,8 +241,8 @@ class Leg:
 # move it returns immediately.
 #
   
-  def StepLine():
-   if !self.lineActive:
+ def StepLine(self):
+   if not self.lineActive:
     return
    t = time.monotonic_ns()
    if t < self.nextLineStepTime:
@@ -259,7 +259,7 @@ class Leg:
 # Is the leg doing anything?
 #
   
-  def Active():
+ def Active(self):
    return self.lineActive
 
 #
@@ -267,14 +267,14 @@ class Leg:
 # a tight loop all the time.
 #
   
-  def Spin():
+ def Spin(self):
    self.StepLine()
    
 #
 # Stop anything that the leg is doing immediately.
 #
    
-  def Stop():
+ def Stop(self):
    self.lineActive = False
    self.lineStepsRemaining = 0
    
@@ -342,7 +342,7 @@ while c != 'q':
     	p = (float(p[0]), float(p[1]))
     	leg.StraightToPoint(p, v)
     elif c == 'r':
-    	tEnd = toNanoseconds*input("Seconds to spin: ") + time.monotonic_ns()
+    	tEnd = toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
     	while time.monotonic_ns() < tEnd:
     	 leg.Spin()
     elif c == 'x':
