@@ -35,6 +35,10 @@ ulna = 49
 toDegrees = 180.0/maths.pi
 toRadians = 1.0/toDegrees
 
+# Time
+
+toNanoseconds = 1e9
+
 # Convert (a1, a2) between degrees and radians
 
 def ToDegrees(a):
@@ -78,14 +82,22 @@ class Servos:
     servo = int(l[0])
     a = float(l[1])
     d = float(l[2])
-    if a < 0.0:
-     # No servo at this location - disable the PWM
-     self.kit.servo[servo]._pwm_out.duty_cycle = 0
-    else:
-     self.kit.servo[servo].angle = a
-     self.angleOffsets[servo] = a
-     self.angle[servo] = 0.0
-     self.direction[servo] = d
+    self.angleOffsets[servo] = a
+    self.direction[servo] = d
+    
+#
+# Move the servos to their zero positions
+#     
+     
+ def GoToZeros():
+  for servo in range(servoCount):
+   self.angle[servo] = 0.0
+   if self.angleOffsets[servo] < 0.0:
+    # No servo at this location - disable the PWM
+    self.kit.servo[servo]._pwm_out.duty_cycle = 0
+   else:
+     self.kit.servo[servo].angle = self.angleOffsets[servo]
+  
 
 #
 # Actually turn a servo; expects an angle in degrees.
@@ -134,6 +146,7 @@ class Leg:
   self.l2 = ulna
   self.p = (0.0, 0.0)
   self.step = 1.0
+  self.lineActive = False
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -205,7 +218,10 @@ class Leg:
    print("No can do")
    
 #
-# Move in a straight line to p at v mm/s
+# Move in a straight line to p at v mm/s.
+# The first function sets up the needed variables.
+# Everything works in nanoseconds, which is a bit OTT,
+# but that's what the Python time class gives us.
 #
 
  def StraightToPoint(self, p, v):
@@ -213,14 +229,54 @@ class Leg:
   d = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
   if d < resolution:
    return
-  steps = int(0.5 + d/self.step)
-  dStep = d/steps
-  dInc = (dStep*diff[0]/d, dStep*diff[1]/d)
-  tStep = dStep/v
-  for s in range(steps):
-   p = (self.p[0] + dInc[0], self.p[1] + dInc[1])
+  self.lineStepsRemaining = int(0.5 + d/self.step)
+  dStep = d/self.lineStepsRemaining
+  self.dInc = (dStep*diff[0]/d, dStep*diff[1]/d)
+  self.tStep = toNanoseconds*dStep/v
+  self.nextLineStepTime = time.monotonic_ns()
+  self.lineActive = True
+
+#
+# This moves the leg a step at a time. If it's not time to
+# move it returns immediately.
+#
+  
+  def StepLine():
+   if !self.lineActive:
+    return
+   t = time.monotonic_ns()
+   if t < self.nextLineStepTime:
+    return
+   p = (self.p[0] + self.dInc[0], self.p[1] + self.dInc[1])
    self.QuickToPoint(p)
-   time.sleep(tStep)
+   self.lineStepsRemaining -= 1
+   if self.lineStepsRemaining <= 0:
+    self.lineActive = False
+    return
+   self.nextLineStepTime += self.tStep
+
+#
+# Is the leg doing anything?
+#
+  
+  def Active():
+   return self.lineActive
+
+#
+# Crude timesharing. This function should be called in
+# a tight loop all the time.
+#
+  
+  def Spin():
+   self.StepLine()
+   
+#
+# Stop anything that the leg is doing immediately.
+#
+   
+  def Stop():
+   self.lineActive = False
+   self.lineStepsRemaining = 0
    
 #
 # Where is the foot?
@@ -251,12 +307,15 @@ def Prompt():
     print(" p - print servo angles")
     print(" g - quick to x, y position")
     print(" l - straight line to position")
+    print(" r - spin the line for N seconds")
     print(" x - what is the position")
+    print(" z - zero the servos")
     print(" q - quit")
 
 
 servos = Servos()
 servos.LoadZeros()
+servos.GoToZeros()
 leg = Leg(9, 8, 1, servos) 
 c = ' '
 servo = 0
@@ -282,8 +341,14 @@ while c != 'q':
     	v = float(p[2])
     	p = (float(p[0]), float(p[1]))
     	leg.StraightToPoint(p, v)
+    elif c == 'r':
+    	tEnd = toNanoseconds*input("Seconds to spin: ") + time.monotonic_ns()
+    	while time.monotonic_ns() < tEnd:
+    	 leg.Spin()
     elif c == 'x':
     	print("At " + str(leg.GetPoint()))
+    elif c == 'z':
+    	servos.GoToZeros()
     elif c == 'q':
         pass
     else:
