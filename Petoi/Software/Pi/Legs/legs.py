@@ -147,7 +147,7 @@ class Leg:
   self.p = (0.0, 0.0)
   self.step = 1.0
   self.lineActive = False
-  self.RowActive = False
+  self.rowActive = False
   self.lineWasActive = False
   self.rowWasActive = False
 
@@ -264,7 +264,7 @@ class Leg:
 # Set up a loop of lines representing a row.
 #
    
- def Row(rowPoints):
+ def Row(self, rowPoints):
   self.rowPoints = rowPoints
   self.nextRowSegment = 0
   self.rowActive = True
@@ -305,7 +305,7 @@ class Leg:
 #
    
  def Stop(self):
-  self.lineWasActive = self.LineActive
+  self.lineWasActive = self.lineActive
   self.rowWasActive = self.rowActive
   self.lineActive = False
   self.rowActive = False
@@ -314,8 +314,10 @@ class Leg:
 # Resume whatever was being done, if anything
 #
 
- def Resulme(self):
+ def Resume(self):
   self.lineActive = self.lineWasActive
+  if self.lineActive:
+   self.nextLineStepTime = time.monotonic_ns() 
   self.rowActive = self.rowWasActive
    
 #
@@ -392,7 +394,7 @@ while c != 'q':
     	 p = p.split(",")
     	 v = float(p[2])
     	 if v > 0:
-    	  rowPoints.append((float(p[0]), float(p[1])), v)
+    	  rowPoints.append( ((float(p[0]), float(p[1])), v) )
     	leg.Row(rowPoints)
     elif c == 's':
     	tEnd = toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
