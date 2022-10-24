@@ -1,5 +1,5 @@
 #
-# Petoi Bittle Control Program
+# Petoi Bittle Control Program For a Raspberry Pi
 #
 # Written by
 #
@@ -72,7 +72,7 @@ class Servos:
   self.direction = [1.0]*servoCount
 
 #
-# Get the offsets from the file zero-angles and apply them.
+# Get the offsets from the file zero-angles.
 #
 
  def LoadZeros(self):
@@ -147,6 +147,9 @@ class Leg:
   self.p = (0.0, 0.0)
   self.step = 1.0
   self.lineActive = False
+  self.RowActive = False
+  self.lineWasActive = False
+  self.rowWasActive = False
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -235,6 +238,7 @@ class Leg:
   self.tStep = toNanoseconds*dStep/v
   self.nextLineStepTime = time.monotonic_ns()
   self.lineActive = True
+  self.lineWasActive = True
 
 #
 # This moves the leg a step at a time. If it's not time to
@@ -242,25 +246,50 @@ class Leg:
 #
   
  def StepLine(self):
-   if not self.lineActive:
-    return
-   t = time.monotonic_ns()
-   if t < self.nextLineStepTime:
-    return
-   p = (self.p[0] + self.dInc[0], self.p[1] + self.dInc[1])
-   self.QuickToPoint(p)
-   self.lineStepsRemaining -= 1
-   if self.lineStepsRemaining <= 0:
-    self.lineActive = False
-    return
-   self.nextLineStepTime += self.tStep
+  if not self.lineActive:
+   return
+  t = time.monotonic_ns()
+  if t < self.nextLineStepTime:
+   return
+  p = (self.p[0] + self.dInc[0], self.p[1] + self.dInc[1])
+  self.QuickToPoint(p)
+  self.lineStepsRemaining -= 1
+  if self.lineStepsRemaining <= 0:
+   self.lineActive = False
+   self.lineWasActive = False
+   return
+  self.nextLineStepTime += self.tStep
 
+#
+# Set up a loop of lines representing a row.
+#
+   
+ def Row(rowPoints):
+  self.rowPoints = rowPoints
+  self.nextRowSegment = 0
+  self.rowActive = True
+  self.rowWasActive = True
+
+#
+# This increments the row to the next line segment if the last
+# is finished
+#
+ 
+ def StepRow(self):
+  if not self.rowActive:
+   return
+  if self.lineActive:
+   return
+  pv = self.rowPoints[self.nextRowSegment]
+  self.StraightToPoint(pv[0], pv[1])
+  self.nextRowSegment = (self.nextRowSegment + 1) % len(self.rowPoints)
+  
 #
 # Is the leg doing anything?
 #
   
  def Active(self):
-   return self.lineActive
+  return self.lineActive or self.RowActive
 
 #
 # Crude timesharing. This function should be called in
@@ -268,15 +297,26 @@ class Leg:
 #
   
  def Spin(self):
-   self.StepLine()
+  self.StepLine()
+  self.StepRow()
    
 #
 # Stop anything that the leg is doing immediately.
 #
    
  def Stop(self):
-   self.lineActive = False
-   self.lineStepsRemaining = 0
+  self.lineWasActive = self.LineActive
+  self.rowWasActive = self.rowActive
+  self.lineActive = False
+  self.rowActive = False
+
+#
+# Resume whatever was being done, if anything
+#
+
+ def Resulme(self):
+  self.lineActive = self.lineWasActive
+  self.rowActive = self.rowWasActive
    
 #
 # Where is the foot?
@@ -302,12 +342,15 @@ class Leg:
 
 def Prompt():
     print("Commands: ")
-    print(" s - set servo number")
+    print(" n - set servo number")
     print(" a - set servo angle")
     print(" p - print servo angles")
     print(" g - quick to x, y position")
     print(" l - straight line to position")
-    print(" r - spin the line for N seconds")
+    print(" r - set row points")
+    print(" s - spin the line for N seconds")
+    print(" S - stop all movement")
+    print(" R - resume all movement")
     print(" x - what is the position")
     print(" z - zero the servos")
     print(" q - quit")
@@ -322,7 +365,7 @@ servo = 0
 Prompt()
 while c != 'q':
     c = input("Command: ")
-    if c == 's':
+    if c == 'n':
         servo = int(input("Set servo to: "))
     elif c == 'a':
         servos.SetAngle(servo, float(input("Set servo " + str(servo) + " angle to: ")))
@@ -342,9 +385,23 @@ while c != 'q':
     	p = (float(p[0]), float(p[1]))
     	leg.StraightToPoint(p, v)
     elif c == 'r':
+    	v = 1
+    	rowPoints = []
+    	while v > 0:
+    	 p = input("x, y, v (-v to end): ")
+    	 p = p.split(",")
+    	 v = float(p[2])
+    	 if v > 0:
+    	  rowPoints.append((float(p[0]), float(p[1])), v)
+    	leg.Row(rowPoints)
+    elif c == 's':
     	tEnd = toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
     	while time.monotonic_ns() < tEnd:
     	 leg.Spin()
+    elif c == 'S':
+    	leg.Stop()
+    elif c == 'R':
+    	leg.Resume()
     elif c == 'x':
     	print("At " + str(leg.GetPoint()))
     elif c == 'z':
