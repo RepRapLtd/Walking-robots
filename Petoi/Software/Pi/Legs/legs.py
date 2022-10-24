@@ -398,6 +398,7 @@ while c != 'q':
     	leg.Row(rowPoints)
     elif c == 's':
     	tEnd = toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
+    	leg.nextLineStepTime = time.monotonic_ns()
     	while time.monotonic_ns() < tEnd:
     	 leg.Spin()
     elif c == 'S':
