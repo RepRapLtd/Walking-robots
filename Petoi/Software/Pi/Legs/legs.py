@@ -16,6 +16,7 @@
 import time
 import math as maths
 from adafruit_servokit import ServoKit
+import smbus
 
 # Number of servos potentially controllable by the PCA9685 PWM controller in the robot
 
@@ -46,8 +47,142 @@ def ToDegrees(a):
 
 def ToRadians(a):
  return (a[0]*toRadians, a[1]*toRadians)
+ 
+###########################################################################################
+#
+# The LTC 2990 Quad I2C Voltage, Current and Temperature Monitor is used to
+# measure the output from the Hall effect sensors that determine if a foot is touching a 
+# surface or not.
+#
+
+# 
+# LTC 2990 Quad I2C Voltage, Current and Temperature Monitor
+# Retrieves LTC2990 register and performs some basic operations.
+# Specs: http://www.linear.com/product/LTC2990
+# Source: https://github.com/rfrht/ltc2990
+#
+# Copyright (C) 2015 Rodrigo A B Freire
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+#
+#--------------------------------------------------------
+#
+# Updated to Python3 and made into a class by
+#
+# Adrian Bowyer
+# RepRap Ltd
+# https://reprapltd.com
+#
+# 26 May 2022
+#
 
 
+class AtoD:
+ 
+ def __init__(self):
+  self.bus = smbus.SMBus(1)   # 512-MB RPi the bus is 1. Otherwise, bus is 0.
+
+# Pro tip: Ensure that ADR0 and ADR1 are grounded. Do not let them
+# open. Otherwise, the i2c address will randomly change.
+
+  self.address = 0x4c         # I2C chip address
+  mode = 0x5f            # Register 0x01 mode select. V1, V2, V3, V4
+  err = ""
+
+  try:
+   if self.bus.read_byte_data(self.address, 0x01) != mode: # If current IC mode != program mode
+    self.bus.write_byte_data(self.address, 0x01, mode)    # Initializes the IC and set mode
+    self.bus.write_byte_data(self.address, 0x02, 0x00)    # Trigger a initial data collection
+    time.sleep(1)				# Wait a sec, just for init
+  except (IOError, err):
+   print(err)
+   
+# Check for a specific bit value
+   
+ def GetBit(self, number, bit):
+  return (number >> bit) & 1 
+  
+# 2 bytes to Chip temperature
+
+ def GetTemperature(self, msb, lsb):
+  msb = format(msb, '08b')
+  msb = msb[3:]
+  lsb = format(lsb, '08b')
+  temp = msb + lsb
+  temp = int(temp, 2)/16
+  return temp
+
+# 2 bytes to voltage
+ 
+ def GetVoltage(self, msb, lsb):
+  msb = format(msb, '08b')
+  msb = msb[1:]
+  lsb = format(lsb, '08b')
+  signal = GetBit(int(msb, 2),6)
+  #print "positive:0 negative:1 %s" %signal
+  volt = msb[1:] + lsb
+  volt = int(volt, 2) * 0.00030518
+  return volt
+
+# Return everything the chip knows as a printable string
+
+ def GetAllValues(self):
+  self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+  r0 = self.bus.read_byte_data(self.address, 0x00) # Status
+  r1 = self.bus.read_byte_data(self.address, 0x01) # Control - mode select
+  r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
+  r5 = self.bus.read_byte_data(self.address, 0x05) # Temp. Int. LSB
+  r6 = self.bus.read_byte_data(self.address, 0x06) # V1, V1 - V2 or TR1 MSB
+  r7 = self.bus.read_byte_data(self.address, 0x07) # V1, V1 - V2 or TR1 LSB
+  r8 = self.bus.read_byte_data(self.address, 0x08) # V2, V1 - V2 or TR1 MSB
+  r9 = self.bus.read_byte_data(self.address, 0x09) # V2, V1 - V2 or TR1 LSB
+  ra = self.bus.read_byte_data(self.address, 0x0a) # V3, V3 - V4 or TR2 MSB
+  rb = self.bus.read_byte_data(self.address, 0x0b) # V3, V3 - V4 or TR2 LSB
+  rc = self.bus.read_byte_data(self.address, 0x0c) # V4, V3 - V4 or TR2 MSB
+  rd = self.bus.read_byte_data(self.address, 0x0d) # V4, V3 - V4 or TR2 LSB
+  re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
+  rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
+  result = "Int. Temp. : " + str(self.GetTemperature(r4,r5)) + " Celsius\n"
+  result += "Voltage V1 : " + str(self.GetVoltage(r6,r7)) + " V\n"
+  result += "Voltage V2 : " + str(self.GetVoltage(r8,r9)) + " V\n"
+  result += "Voltage V3 : " + str(self.GetVoltage(ra,rb)) + " V\n"
+  result += "Voltage V4 : " + str(self.GetVoltage(rc,rd)) + " V\n" 
+  result += "Supply: " + str(self.GetVoltage(re,rf) + 2.5) + " V\n"
+
+  # If you want to use TR, use the temperature(msb,lsb) function to get the
+  # value. I.e., if you have set the mode TR1 & TR2 (mode 0x5d),
+  # Comment the print "Voltage" lines and uncomment these ones:
+  # TR1
+  # print "Temperature TR1: %s Celsius" %temperature(r6,r7)
+  # TR2
+  # print "Temperature TR2: %s Celsius" %temperature(ra,rb)
+  
+  return result
+
+#
+# Voltage on one of the four channels.
+#
+
+ def Voltage(self, channel):
+  self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+  msb = channel*2 + 0x06
+  lsb = msb + 1
+  msb = self.bus.read_byte_data(self.address, msb)
+  lsb = self.bus.read_byte_data(self.address, lsb)  
+  return self.GetVoltage(msb, lsb)
 
 ##########################################################################################
 #
@@ -137,11 +272,12 @@ class Servos:
     
 class Leg:
 
- def __init__(self, shoulder, foreleg, foot, servos):
+ def __init__(self, servos, shoulder, foreleg, aToD, foot):
+  self.servos = servos
   self.shoulder = shoulder
   self.foreleg = foreleg
+  self.aToD = aToD
   self.foot = foot
-  self.servos = servos
   self.l1 = humerus
   self.l2 = ulna
   self.p = (0.0, 0.0)
@@ -335,6 +471,13 @@ class Leg:
   a = ToRadians((self.servos.Angle(self.shoulder), self.servos.Angle(self.foreleg)))
   p = self.PositionFromAngles(a)
   return self.LegToRobotCoordinates(p)
+
+#
+# The voltage on the foot Hall sensor
+#
+
+ def FootVoltage(self):
+  return self.aToD.Voltage(foot)
   
 #
 ############################################################################################
@@ -355,13 +498,16 @@ def Prompt():
     print(" R - resume all movement")
     print(" x - what is the position")
     print(" z - zero the servos")
+    print(" d - print all A to D data")
+    print(" v - print the leg foot voltage")
     print(" q - quit")
 
 
 servos = Servos()
 servos.LoadZeros()
 servos.GoToZeros()
-leg = Leg(9, 8, 1, servos) 
+aToD = AToD()
+leg = Leg(servos, 9, 8, aToD, 0) 
 c = ' '
 servo = 0
 Prompt()
@@ -409,6 +555,10 @@ while c != 'q':
     	print("At " + str(leg.GetPoint()))
     elif c == 'z':
     	servos.GoToZeros()
+    elif c == 'd':
+    	print(aToD.GetAllValues())
+    elif c == 'v':
+    	print(str(leg.FootVoltage()))
     elif c == 'q':
         pass
     else:
