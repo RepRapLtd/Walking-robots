@@ -90,7 +90,7 @@ def ToRadians(a):
 #
 
 
-class AtoD:
+class AToD:
  
  def __init__(self):
   self.bus = smbus.SMBus(1)   # 512-MB RPi the bus is 1. Otherwise, bus is 0.
@@ -131,7 +131,7 @@ class AtoD:
   msb = format(msb, '08b')
   msb = msb[1:]
   lsb = format(lsb, '08b')
-  signal = GetBit(int(msb, 2),6)
+  signal = self.GetBit(int(msb, 2),6)
   #print "positive:0 negative:1 %s" %signal
   volt = msb[1:] + lsb
   volt = int(volt, 2) * 0.00030518
@@ -477,7 +477,7 @@ class Leg:
 #
 
  def FootVoltage(self):
-  return self.aToD.Voltage(foot)
+  return self.aToD.Voltage(self.foot)
   
 #
 ############################################################################################
