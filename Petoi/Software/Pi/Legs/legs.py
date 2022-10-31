@@ -42,6 +42,10 @@ import math as maths
 from adafruit_servokit import ServoKit
 import smbus
 
+# Report stuff
+
+debug = True
+
 # Number of servos potentially controllable by the PCA9685 PWM controller in the robot
 
 servoCount = 16
@@ -357,7 +361,8 @@ class Leg:
   yp2 = position[1]*position[1]
   sigma = -l12*l12 + 2*l12*l22 +2*l12*xp2 + 2*l12*yp2 - l22*l22 +2*l22*xp2 + 2*l22*yp2 - xp2*xp2 -2*xp2*yp2 -yp2*yp2
   if sigma < 0.0:
-   print("No reverse kinematic solution for position " + str(position))
+   if debug:
+    print("No reverse kinematic solution for position " + str(position))
    return [False, (0, 0), (0, 0)]
   sigma = maths.sqrt(sigma)
   div = l12 + 2*self.l1*position[0] - l22 + xp2 + yp2
@@ -365,7 +370,8 @@ class Leg:
   a1m = 2*maths.atan2(2*self.l1*position[1] - sigma, div)
   sigma = (-l12 + 2*self.l1*self.l2 - l22 + xp2 + yp2)*(l12 + 2*self.l1*self.l2 + l22 - xp2 - yp2)
   if sigma < 0.0:
-   print("No reverse kinematic solution for position " + str(position))
+   if debug:
+    print("No reverse kinematic solution for position " + str(position))
    return [False, (0, 0), (0, 0)]
   sigma = maths.sqrt(sigma)
   div = -l12 + 2*self.l1*self.l2 - l22 + xp2 + yp2
@@ -456,7 +462,7 @@ class Leg:
 #
   
  def Active(self):
-  return self.lineActive or self.RowActive
+  return self.lineActive or self.rowActive
 
 #
 # Crude timesharing. This function should be called in
@@ -468,10 +474,10 @@ class Leg:
   self.StepRow()
    
 #
-# Stop anything that the leg is doing immediately.
+# Pause anything that the leg is doing immediately.
 #
    
- def Stop(self):
+ def Pause(self):
   self.lineWasActive = self.lineActive
   self.rowWasActive = self.rowActive
   self.lineActive = False
@@ -525,7 +531,7 @@ def Prompt():
     print(" l - straight line to position")
     print(" r - set row points")
     print(" s - spin the line for N seconds")
-    print(" S - stop all movement")
+    print(" P - pause all movement")
     print(" R - resume all movement")
     print(" x - what is the position")
     print(" z - zero the servos")
@@ -578,8 +584,8 @@ while c != 'q':
     	leg.nextLineStepTime = time.monotonic_ns()
     	while time.monotonic_ns() < tEnd:
     	 leg.Spin()
-    elif c == 'S':
-    	leg.Stop()
+    elif c == 'P':
+    	leg.Pause()
     elif c == 'R':
     	leg.Resume()
     elif c == 'x':
