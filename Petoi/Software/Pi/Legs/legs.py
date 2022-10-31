@@ -123,7 +123,8 @@ class AToD:
 # open. Otherwise, the i2c address will randomly change.
 
   self.address = 0x4c         # I2C chip address
-  mode = 0x5f            # Register 0x01 mode select. V1, V2, V3, V4
+#  self.mode = 0x5f            # Register 0x01 mode select - single aquisition
+  self.mode = 0x1f            # Register 0x01 mode select - repeated aquisition
   err = ""
 
   try:
@@ -164,8 +165,9 @@ class AToD:
 # Return everything the chip knows as a printable string
 
  def GetAllValues(self):
-  self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
-  time.sleep(0.1)
+  if self.mode is 0x5f:
+   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   time.sleep(0.1)
   r0 = self.bus.read_byte_data(self.address, 0x00) # Status
   r1 = self.bus.read_byte_data(self.address, 0x01) # Control - mode select
   r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
@@ -180,7 +182,9 @@ class AToD:
   rd = self.bus.read_byte_data(self.address, 0x0d) # V4, V3 - V4 or TR2 LSB
   re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
   rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
-  result = "Int. Temp. : " + str(self.GetTemperature(r4,r5)) + " Celsius\n"
+  result = "Status register: " + hex(r0) + "\n"
+  result += "Control register: " + hex(r1) + "\n"
+  result += "Int. Temp. : " + str(self.GetTemperature(r4,r5)) + " Celsius\n"
   result += "Voltage V0 : " + str(self.GetVoltage(r6,r7)) + " V\n"
   result += "Voltage V1 : " + str(self.GetVoltage(r8,r9)) + " V\n"
   result += "Voltage V2 : " + str(self.GetVoltage(ra,rb)) + " V\n"
@@ -202,10 +206,11 @@ class AToD:
 #
 
  def Voltage(self, channel):
-  self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
   msb = channel*2 + 0x06
   lsb = msb + 1
-  time.sleep(0.1) # 100 ms is horribly long...
+  if self.mode is 0x5f:
+   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   time.sleep(0.1) # 100 ms is horribly long...
   msb = self.bus.read_byte_data(self.address, msb)
   lsb = self.bus.read_byte_data(self.address, lsb)  
   return self.GetVoltage(msb, lsb)
