@@ -12,6 +12,30 @@
 #
 # Licence: GPL
 #
+#
+# Joint servo numbers and foot sensors (top view)
+#
+#    V0                      V1
+#     |                      |
+#     |           H          |
+#    15          12           8
+#    |                        |
+#    |                        |
+#   14                         9
+#
+#
+#    V2                     V3 
+#     |                     |
+#     |                     |
+#    1                       7
+#    |                       |
+#    |                       |
+#    0                       6
+#
+# Vn are Hall effect foot voltages. A foot on the ground is about 0.1V less than one in
+# the air. H is the head (servo 12). The other numbers are the shoulder and elbow servo
+# numbers.
+#
 
 import time
 import math as maths
@@ -141,6 +165,7 @@ class AToD:
 
  def GetAllValues(self):
   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+  time.sleep(0.1)
   r0 = self.bus.read_byte_data(self.address, 0x00) # Status
   r1 = self.bus.read_byte_data(self.address, 0x01) # Control - mode select
   r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
@@ -156,10 +181,10 @@ class AToD:
   re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
   rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
   result = "Int. Temp. : " + str(self.GetTemperature(r4,r5)) + " Celsius\n"
-  result += "Voltage V1 : " + str(self.GetVoltage(r6,r7)) + " V\n"
-  result += "Voltage V2 : " + str(self.GetVoltage(r8,r9)) + " V\n"
-  result += "Voltage V3 : " + str(self.GetVoltage(ra,rb)) + " V\n"
-  result += "Voltage V4 : " + str(self.GetVoltage(rc,rd)) + " V\n" 
+  result += "Voltage V0 : " + str(self.GetVoltage(r6,r7)) + " V\n"
+  result += "Voltage V1 : " + str(self.GetVoltage(r8,r9)) + " V\n"
+  result += "Voltage V2 : " + str(self.GetVoltage(ra,rb)) + " V\n"
+  result += "Voltage V3 : " + str(self.GetVoltage(rc,rd)) + " V\n" 
   result += "Supply: " + str(self.GetVoltage(re,rf) + 2.5) + " V\n"
 
   # If you want to use TR, use the temperature(msb,lsb) function to get the
@@ -180,6 +205,7 @@ class AToD:
   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
   msb = channel*2 + 0x06
   lsb = msb + 1
+  time.sleep(0.1) # 100 ms is horribly long...
   msb = self.bus.read_byte_data(self.address, msb)
   lsb = self.bus.read_byte_data(self.address, lsb)  
   return self.GetVoltage(msb, lsb)
@@ -507,7 +533,7 @@ servos = Servos()
 servos.LoadZeros()
 servos.GoToZeros()
 aToD = AToD()
-leg = Leg(servos, 9, 8, aToD, 0) 
+leg = Leg(servos, 9, 8, aToD, 1) 
 c = ' '
 servo = 0
 Prompt()
