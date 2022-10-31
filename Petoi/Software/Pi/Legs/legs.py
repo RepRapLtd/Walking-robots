@@ -132,8 +132,8 @@ class AToD:
   err = ""
 
   try:
-   if self.bus.read_byte_data(self.address, 0x01) != mode: # If current IC mode != program mode
-    self.bus.write_byte_data(self.address, 0x01, mode)    # Initializes the IC and set mode
+   if self.bus.read_byte_data(self.address, 0x01) != self.mode: # If current IC mode != program mode
+    self.bus.write_byte_data(self.address, 0x01, self.mode)    # Initializes the IC and set mode
     self.bus.write_byte_data(self.address, 0x02, 0x00)    # Trigger a initial data collection
     time.sleep(1)				# Wait a sec, just for init
   except (IOError, err):
