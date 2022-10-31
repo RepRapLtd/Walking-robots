@@ -42,6 +42,7 @@
 # Test program
 #
 
+import time
 import rrlpetoi as rrlp
 
 def Prompt():
@@ -62,11 +63,11 @@ def Prompt():
     print(" q - quit")
 
 
-servos = Servos()
+servos = rrlp.Servos()
 servos.LoadZeros()
 servos.GoToZeros()
-aToD = AToD()
-leg = Leg(servos, 9, 8, aToD, 1) 
+aToD = rrlp.AToD()
+leg = rrlp.Leg(servos, 9, 8, aToD, 1) 
 c = ' '
 servo = 0
 Prompt()
@@ -102,7 +103,7 @@ while c != 'q':
     	  rowPoints.append( ((float(p[0]), float(p[1])), v) )
     	leg.Row(rowPoints)
     elif c == 's':
-    	tEnd = toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
+    	tEnd = rrlp.toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
     	leg.nextLineStepTime = time.monotonic_ns()
     	while time.monotonic_ns() < tEnd:
     	 leg.Spin()
