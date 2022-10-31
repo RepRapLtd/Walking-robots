@@ -1,5 +1,5 @@
 #
-# Petoi Bittle Control Program For a Raspberry Pi
+# Petoi Bittle Library For a Raspberry Pi
 #
 # Written by
 #
