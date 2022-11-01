@@ -1,4 +1,6 @@
 
+This README is work in progress, and more a collection of our development notes at the moment.
+
 Installation
 ============
 
@@ -7,7 +9,7 @@ $ cd VL53L0X-python
 $ make
 
 
-$ sudo pip3 install install whiptail-dialogs
+$ python3 -m pip install git+https://github.com/domdfcoding/whiptail@master --user
 
 $ sudo pip3 install adafruit-circuitpython-servokit
 
@@ -111,7 +113,7 @@ Report IP address on OLED display
 
 In /etc/rc.local:
 
-sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/OLED_Module_Code/RaspberryPi/python/example/display-ip.py > /dev/null &
+sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/Experiments/OLED_Module_Code/RaspberryPi/python/example/display-ip.py > /dev/null &
 
 
 
