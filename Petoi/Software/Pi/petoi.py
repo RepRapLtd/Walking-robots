@@ -45,23 +45,54 @@
 
 from whiptail import Whiptail
 
-w = Whiptail(title="This is the title", backtitle="This is the backtitle")
+w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="RepRap Ltd Quadruped Robot Control Program")
 
-prompt = w.inputbox("Enter some text:")[0]
-print(f"You entered: '{prompt}'!")
+def EditServo(servo):
+ loop = True
+ while loop:
+  menu = w.menu("Servo action" + str(servo), ["+", "-", "a"])
+  loop = menu[1] is 0
+  if loop:
+   symbol = menu[0]
+   print("symbol was " + symbol)
+   
+def ChooseServo():
+ loop = True
+ while loop:
+  menu = w.menu("Choose servo", ["15", "14", "8"])
+  loop = menu[1] is 0
+  if loop:
+   servo = int(menu[0])
+   EditServo(servo)
+   
+   
+'''  
+  
+  
 
-prompt_default = w.inputbox("Enter some text:", "Some Text ;)")[0]
-print(f"You entered: '{prompt_default}'!")
+#prompt = w.inputbox("Enter some text:")[0]
+#print(f"You entered: '{prompt}'!")
 
-prompt_password = w.inputbox("Enter a (pretend) password:", password=True)[0]
-print(f"Your password is: '{prompt_password}'!")
+#prompt_default = w.inputbox("Enter some text:", "Some Text ;)")[0]
+#print(f"You entered: '{prompt_default}'!")
 
-msgbox = w.msgbox("This is a msgbox!")  # type: ignore
-print(f"msgbox doesn't return anything, see: {msgbox}")
+#prompt_password = w.inputbox("Enter a (pretend) password:", password=True)[0]
+#print(f"Your password is: '{prompt_password}'!")
 
-menu = w.menu("This is a menu.", ["Option 1", "Option 2", "Option 3", "Option 4"])[0]
-print(f"You selected '{menu}'")
+#msgbox = w.msgbox("This is a msgbox!")  # type: ignore
+#print(f"msgbox doesn't return anything, see: {msgbox}")
 
+'''
+menu = w.menu("Control", ["servos", "legs"])[0]
+if menu == "servos":
+ ChooseServo()
+elif menu == "legs":
+ menu = w.menu("Choose leg", ["front left", "front right","back left","back right"])[0]
+ print(menu)
+ 
+
+
+'''
 menu_descriptions = w.menu(
 		"This is a menu with descriptions.",
 		[("Option 1", "Does Something"), ("Option 2", "Does Something Else")],
@@ -79,7 +110,7 @@ textbox = w.textbox(__file__)
 print(textbox)
 
 
-'''
+
 
 import time
 import rrlpetoi as rrlp
