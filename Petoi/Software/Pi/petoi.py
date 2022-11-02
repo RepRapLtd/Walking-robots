@@ -47,48 +47,63 @@ from whiptail import Whiptail
 
 w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="RepRap Ltd Quadruped Robot Control Program")
 
+activeServos = [0, 1, 6, 7, 8, 9, 12, 14, 15]
+legs = ["front left", "front right","back left", "back right"]
+ 
 def EditServo(servo):
  loop = True
  while loop:
-  menu = w.menu("Servo action" + str(servo), ["+", "-", "a"])
+  menu = w.menu("Servo " + str(servo), ["increment", "decrement", "+10", "-10", "change direction", "save current angle as offset"])
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
-   print("symbol was " + symbol)
+   w.msgbox(symbol + " selected")
    
-def ChooseServo():
+def SaveZeros():
+ w.msgbox("saved")
+   
+def ChooseServo(active):
  loop = True
+ a = ["save as zeros"]
+ for s in active:
+  a.append(str(s))
  while loop:
-  menu = w.menu("Choose servo", ["15", "14", "8"])
+  menu = w.menu("Choose servo", a)
   loop = menu[1] is 0
   if loop:
-   servo = int(menu[0])
-   EditServo(servo)
+   if menu[0] == "save as zeros":
+    SaveZeros()
+   else:
+    servo = int(menu[0])
+    EditServo(servo)
+    
+def EditLeg(leg):
+ loop = True
+ while loop:
+  menu = w.menu(leg + " leg", ["step", "fold", "b"])
+  loop = menu[1] is 0
+  if loop:
+   symbol = menu[0]
+   w.msgbox(symbol + " selected")   
+    
+def ChooseLeg(legs):
+ loop = True
+ while loop:
+  menu = w.menu("Choose leg", legs)
+  loop = menu[1] is 0
+  if loop:
+   EditLeg(menu[0])
    
-   
-'''  
-  
-  
 
-#prompt = w.inputbox("Enter some text:")[0]
-#print(f"You entered: '{prompt}'!")
-
-#prompt_default = w.inputbox("Enter some text:", "Some Text ;)")[0]
-#print(f"You entered: '{prompt_default}'!")
-
-#prompt_password = w.inputbox("Enter a (pretend) password:", password=True)[0]
-#print(f"Your password is: '{prompt_password}'!")
-
-#msgbox = w.msgbox("This is a msgbox!")  # type: ignore
-#print(f"msgbox doesn't return anything, see: {msgbox}")
-
-'''
-menu = w.menu("Control", ["servos", "legs"])[0]
-if menu == "servos":
- ChooseServo()
-elif menu == "legs":
- menu = w.menu("Choose leg", ["front left", "front right","back left","back right"])[0]
- print(menu)
+loop = True
+while loop:
+ menu = w.menu("Control", ["servos", "legs"])
+ loop = menu[1] is 0
+ if loop:
+  if menu[0] == "servos":
+   ChooseServo(activeServos)
+  else:
+   ChooseLeg(legs)
  
 
 
