@@ -39,42 +39,71 @@
 #
 ############################################################################################
 #
-# Test program
+# Control program
 #
 
 
 from whiptail import Whiptail
+import time
+import rrlpetoi as rrlp
 
 w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="RepRap Ltd Quadruped Robot Control Program")
 
-activeServos = [0, 1, 6, 7, 8, 9, 12, 14, 15]
+servos = rrlp.Servos()
+servos.LoadZeros('zero-angles')
+servos.GoToZeros()
+activeServos = servos.activeServos
+aToD = rrlp.AToD()
+flLeg = rrlp.Leg(servos, 14, 15, aToD, 0)
+frLeg = rrlp.Leg(servos, 9, 8, aToD, 1)
+blLeg = rrlp.Leg(servos, 0, 1, aToD, 2)
+brLeg = rrlp.Leg(servos, 6, 7, aToD, 3)
+
 legs = ["front left", "front right","back left", "back right"]
  
 def EditServo(servo):
  loop = True
+ options = ["+1", "-1", "+10", "-10", "negate direction", "save current angle as offset"]
  while loop:
-  menu = w.menu("Servo " + str(servo), ["increment", "decrement", "+10", "-10", "change direction", "save current angle as offset"])
+  menu = w.menu("Servo " + str(servo), options)
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
-   w.msgbox(symbol + " selected")
+   if symbol == "+1":
+    servos.SetAngle(servo, servos.angle[servo] + 1)
+   elif symbol == "-1":
+    servos.SetAngle(servo, servos.angle[servo] - 1)
+   elif symbol == "+10":
+    servos.SetAngle(servo, servos.angle[servo] + 10)
+   elif symbol == "-10":
+    servos.SetAngle(servo, servos.angle[servo] - 10)
+   elif symbol == "negate direction":
+    servos.InvertDirection(servo)
+   elif symbol == "save current angle as offset":
+    servos.MakeCurrentPositionZero(servo)
+   else:
+    w.msgbox("Dud option: " + symbol)
    
 def SaveZeros():
  w.msgbox("saved")
    
 def ChooseServo(active):
  loop = True
- a = ["save as zeros"]
+ a = ["Save current positions as zeros"]
  for s in active:
   a.append(str(s))
  while loop:
   menu = w.menu("Choose servo", a)
   loop = menu[1] is 0
   if loop:
-   if menu[0] == "save as zeros":
-    SaveZeros()
+   symbol = menu[0]
+   if symbol == a[0]:
+    for servo in range(rrlp.servoCount):
+     servos.MakeCurrentPositionZero(servo)
+     servos.SaveZeros()
+     w.msgbox("Zero positions saved")
    else:
-    servo = int(menu[0])
+    servo = int(symbol)
     EditServo(servo)
     
 def EditLeg(leg):
@@ -149,7 +178,7 @@ def Prompt():
 
 
 servos = rrlp.Servos()
-servos.LoadZeros()
+servos.LoadZeros('zero-angles')
 servos.GoToZeros()
 aToD = rrlp.AToD()
 leg = rrlp.Leg(servos, 9, 8, aToD, 1) 

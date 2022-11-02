@@ -240,20 +240,54 @@ class Servos:
   self.angle = [0]*servoCount
   self.angleOffsets = [0]*servoCount
   self.direction = [1.0]*servoCount
+  self.backedUp = False
+  self.activeServos = []
 
 #
-# Get the offsets from the file zero-angles.
+# Get the offsets and directions from the file zero-angles.
 #
 
- def LoadZeros(self):
-  with open('zero-angles') as file:
-   for line in file:
-    l = line.split()
-    servo = int(l[0])
-    a = float(l[1])
-    d = float(l[2])
-    self.angleOffsets[servo] = a
-    self.direction[servo] = d
+ def LoadZeros(self, zeroFile):
+  self.zeroFile = zeroFile
+  i = open(zeroFile)
+  self.activeServos = []
+  for line in i:
+   l = line.split()
+   servo = int(l[0])
+   a = float(l[1])
+   d = float(l[2])
+   self.angleOffsets[servo] = a
+   self.direction[servo] = d
+   if a >= 0.0:
+    self.activeServos.append(servo)
+  i.close()
+
+#
+# Backup the zeros file. Only done once per run to prevent multiple overwrites.
+#
+   
+ def BackupZeros(self)
+  if self.backedUp:
+   return
+  i = open(self.zeroFile)
+  o = open(self.zeroFile + ".bu", "w")
+  for line in i:
+   o.write(line)
+  self.backedUp = True
+  i.close()
+  o.close()
+
+#
+# Overwrite the zero file with the current values  
+#
+
+ def SaveZeros(self):
+  self.BackupZeros()
+  o = open(self.zeroFile, "w")
+  for servo in range(servoCount):
+   o.write(str(servo) + " " + str(self.angleOffsets[servo]) + " " + str(self.direction[servo]) + "\n")
+  o.close()
+  
     
 #
 # Move the servos to their zero positions
@@ -266,7 +300,7 @@ class Servos:
     # No servo at this location - disable the PWM
     self.kit.servo[servo]._pwm_out.duty_cycle = 0
    else:
-     self.kit.servo[servo].angle = self.angleOffsets[servo]
+    self.kit.servo[servo].angle = self.angleOffsets[servo]
   
 
 #
@@ -278,12 +312,30 @@ class Servos:
     self.kit.servo[servo].angle = a1
     self.angle[servo] = a
 
+#
+# Invert the direction seen as positive
+#
+    
+ def InvertDirection(self, servo):
+  self.direction[servo] = -self.direction[servo]
+  self.angle[servo] = -self.angle[servo]
+  
+#
+# Change the offset
+#
+
+ def MakeCurrentPositionZero(self, servo):
+  a1 = self.direction[servo]*self.angle[servo] + self.angleOffsets[servo]
+  self.angleOffsets[servo] = a1
+  self.angle[servo] = 0.0
+
 #    
 # Where am I?
 #
 
  def Angle(self, servo):
   return self.angle[servo]
+
 
 # Turn all servos off (used at shutdown).
   
@@ -508,6 +560,13 @@ class Leg:
   a = ToRadians((self.servos.Angle(self.shoulder), self.servos.Angle(self.foreleg)))
   p = self.PositionFromAngles(a)
   return self.LegToRobotCoordinates(p)
+  
+#
+# Set the leg so its recorded position is wherever its servos currently are
+#
+  
+ def SetFromServoAngles(self):
+  self.p = self.GetPoint()
 
 #
 # The voltage on the foot Hall sensor
