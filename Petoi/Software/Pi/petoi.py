@@ -84,8 +84,6 @@ def EditServo(servo):
    else:
     w.msgbox("Dud option: " + symbol)
    
-def SaveZeros():
- w.msgbox("saved")
    
 def ChooseServo(active):
  loop = True
@@ -100,8 +98,8 @@ def ChooseServo(active):
    if symbol == a[0]:
     for servo in range(rrlp.servoCount):
      servos.MakeCurrentPositionZero(servo)
-     servos.SaveZeros()
-     w.msgbox("Zero positions saved")
+    servos.SaveZeros()
+    w.msgbox("Zero positions saved")
    else:
     servo = int(symbol)
     EditServo(servo)

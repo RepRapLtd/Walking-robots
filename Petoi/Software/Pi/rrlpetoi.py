@@ -266,7 +266,7 @@ class Servos:
 # Backup the zeros file. Only done once per run to prevent multiple overwrites.
 #
    
- def BackupZeros(self)
+ def BackupZeros(self):
   if self.backedUp:
    return
   i = open(self.zeroFile)
