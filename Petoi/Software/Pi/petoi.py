@@ -1,5 +1,8 @@
 #
-# Petoi Bittle Library For a Raspberry Pi
+# Petoi Bittle Control Program For a Raspberry Pi
+#
+# This uses the whiptail menu interface so you can just ssh into the robot via
+# WiFi and control it from a terminal window.
 #
 # Written by
 #
@@ -47,7 +50,7 @@ from whiptail import Whiptail
 import time
 import rrlpetoi as rrlp
 
-w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="RepRap Ltd Quadruped Robot Control Program")
+w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="https://reprapltd.com")
 
 servos = rrlp.Servos()
 servos.LoadZeros('zero-angles')
@@ -102,24 +105,29 @@ def ChooseServo(active):
   leg.SetFromServoAngles()
   
 def GetLegFromName(name):
- index = names.index(name)
- return legs[index]
+ for leg in legs:
+  if leg.name == name:
+   return leg
+ w.message("There's no leg called " + name + ". Returning legs[0].")
+ return legs[0]
     
 def EditLeg(leg):
  loop = True
  while loop:
-  menu = w.menu(leg.name + " leg, at (x, y): " + str(leg.p), ["move to position", "fold", "b"])
+  menu = w.menu(leg.name + " leg, at (x, y): " + str(leg.p), ["move to position", "set horizontal", "b"])
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
    if symbol == "move to position":
-   posAndV = w.inputbox("Move to at velocity in the form - X Y V: ", default = "0 0 10").split()
-   p = (float(posAndV[0]), float(posAndV[1]))
-   v = float(posAndV[2])
-   spinFor = leg.StraightToPoint(p, v)
-   t = time.time() + 0.1 + spinFor
-   while time.time() < t:
-    leg.spin()
+    posAndV = w.inputbox("Move to point at a velocity, Type - X Y V: ", default = "0 0 10").split()
+    p = (float(posAndV[0]), float(posAndV[1]))
+    v = float(posAndV[2])
+    spinFor = leg.StraightToPoint(p, v)
+    t = time.time() + 0.1 + spinFor
+    while time.time() < t:
+     leg.spin()
+   else:
+    pass
      
     
 def ChooseLeg(legs):
