@@ -54,18 +54,13 @@ servos.LoadZeros('zero-angles')
 servos.GoToZeros()
 activeServos = servos.activeServos
 aToD = rrlp.AToD()
-flLeg = rrlp.Leg(servos, 14, 15, aToD, 0)
-frLeg = rrlp.Leg(servos, 9, 8, aToD, 1)
-blLeg = rrlp.Leg(servos, 0, 1, aToD, 2)
-brLeg = rrlp.Leg(servos, 6, 7, aToD, 3)
-
-legs = ["front left", "front right","back left", "back right"]
+legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left"), rrlp.Leg(servos, 9, 8, aToD, 1, "front right"), rrlp.Leg(servos, 0, 1, aToD, 2, "back left"), rrlp.Leg(servos, 6, 7, aToD, 3, "back right")]
  
 def EditServo(servo):
  loop = True
  options = ["+1", "-1", "+10", "-10", "negate direction", "save current angle as offset"]
  while loop:
-  menu = w.menu("Servo " + str(servo), options)
+  menu = w.menu("Servo " + str(servo) + ", angle: " + str(servos.angle[servo]), options)
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
@@ -103,23 +98,40 @@ def ChooseServo(active):
    else:
     servo = int(symbol)
     EditServo(servo)
+ for leg in legs:
+  leg.SetFromServoAngles()
+  
+def GetLegFromName(name):
+ index = names.index(name)
+ return legs[index]
     
 def EditLeg(leg):
  loop = True
  while loop:
-  menu = w.menu(leg + " leg", ["step", "fold", "b"])
+  menu = w.menu(leg.name + " leg, at (x, y): " + str(leg.p), ["move to position", "fold", "b"])
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
-   w.msgbox(symbol + " selected")   
+   if symbol == "move to position":
+   posAndV = w.inputbox("Move to at velocity in the form - X Y V: ", default = "0 0 10").split()
+   p = (float(posAndV[0]), float(posAndV[1]))
+   v = float(posAndV[2])
+   spinFor = leg.StraightToPoint(p, v)
+   t = time.time() + 0.1 + spinFor
+   while time.time() < t:
+    leg.spin()
+     
     
 def ChooseLeg(legs):
  loop = True
+ names = []
+ for leg in legs:
+  names.append(leg.name)
  while loop:
-  menu = w.menu("Choose leg", legs)
+  menu = w.menu("Choose leg", names)
   loop = menu[1] is 0
   if loop:
-   EditLeg(menu[0])
+   EditLeg(GetLegFromName(menu[0]))
    
 
 loop = True
@@ -132,111 +144,8 @@ while loop:
   else:
    ChooseLeg(legs)
  
-
-
-'''
-menu_descriptions = w.menu(
-		"This is a menu with descriptions.",
-		[("Option 1", "Does Something"), ("Option 2", "Does Something Else")],
-		)[0]
-print(f"You selected '{menu_descriptions}'")
-
-radiolist = w.radiolist("Choose One", ["Spam, spam, spam, spam", "Egg", "Chips"])[0]
-print(f"You selected: '{radiolist}'!")
-
-checklist = w.checklist("Choose Multiple", ["Spam, spam, spam, spam", "Egg", "Chips"])[0]
-checklist_str = "' and '".join(checklist)
-print(f"You selected: '{checklist_str}'!")
-
-textbox = w.textbox(__file__)
-print(textbox)
-
-
-
-
-import time
-import rrlpetoi as rrlp
-
-def Prompt():
-    print("Commands: ")
-    print(" n - set servo number")
-    print(" a - set servo angle")
-    print(" p - print servo angles")
-    print(" g - quick to x, y position")
-    print(" l - straight line to position")
-    print(" r - set row points")
-    print(" s - spin the line for N seconds")
-    print(" P - pause all movement")
-    print(" R - resume all movement")
-    print(" x - what is the position")
-    print(" z - zero the servos")
-    print(" d - print all A to D data")
-    print(" v - print the leg foot voltage")
-    print(" q - quit")
-
-
-servos = rrlp.Servos()
-servos.LoadZeros('zero-angles')
-servos.GoToZeros()
-aToD = rrlp.AToD()
-leg = rrlp.Leg(servos, 9, 8, aToD, 1) 
-c = ' '
-servo = 0
-Prompt()
-while c != 'q':
-    c = input("Command: ")
-    if c == 'n':
-        servo = int(input("Set servo to: "))
-    elif c == 'a':
-        servos.SetAngle(servo, float(input("Set servo " + str(servo) + " angle to: ")))
-    elif c == 'p':
-        print("Servo Angle")
-        for s in range(servoCount):
-            print(str(s) + " " + str(servos.Angle(s)))
-    elif c == 'g':
-    	p = input("Desired x, y position: ")
-    	p = p.split(",")
-    	p = (float(p[0]), float(p[1]))
-    	leg.QuickToPoint(p)
-    elif c == 'l':
-    	p = input("Go straight tp x, y position at velocity: ")
-    	p = p.split(",")
-    	v = float(p[2])
-    	p = (float(p[0]), float(p[1]))
-    	leg.StraightToPoint(p, v)
-    elif c == 'r':
-    	v = 1
-    	rowPoints = []
-    	while v > 0:
-    	 p = input("x, y, v (-v to end): ")
-    	 p = p.split(",")
-    	 v = float(p[2])
-    	 if v > 0:
-    	  rowPoints.append( ((float(p[0]), float(p[1])), v) )
-    	leg.Row(rowPoints)
-    elif c == 's':
-    	tEnd = rrlp.toNanoseconds*int(input("Seconds to spin: ")) + time.monotonic_ns()
-    	leg.nextLineStepTime = time.monotonic_ns()
-    	while time.monotonic_ns() < tEnd:
-    	 leg.Spin()
-    elif c == 'P':
-    	leg.Pause()
-    elif c == 'R':
-    	leg.Resume()
-    elif c == 'x':
-    	print("At " + str(leg.GetPoint()))
-    elif c == 'z':
-    	servos.GoToZeros()
-    elif c == 'd':
-    	print(aToD.GetAllValues())
-    elif c == 'v':
-    	print(str(leg.FootVoltage()))
-    elif c == 'q':
-        pass
-    else:
-        Prompt()
-
+ 
+ 
 servos.Relax()
 
-'''
 

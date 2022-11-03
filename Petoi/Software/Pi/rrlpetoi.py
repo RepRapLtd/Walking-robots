@@ -359,7 +359,7 @@ class Servos:
     
 class Leg:
 
- def __init__(self, servos, shoulder, foreleg, aToD, foot):
+ def __init__(self, servos, shoulder, foreleg, aToD, foot, name):
   self.servos = servos
   self.shoulder = shoulder
   self.foreleg = foreleg
@@ -373,6 +373,7 @@ class Leg:
   self.rowActive = False
   self.lineWasActive = False
   self.rowWasActive = False
+  self.name = name
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -450,7 +451,7 @@ class Leg:
 # The first function sets up the needed variables.
 # Everything works in nanoseconds, which is a bit OTT,
 # but that's what the Python time class gives us.
-#
+# Returns the time in seconds that the move will take.
 
  def StraightToPoint(self, p, v):
   diff = (p[0] - self.p[0], p[1] - self.p[1])
@@ -464,6 +465,7 @@ class Leg:
   self.nextLineStepTime = time.monotonic_ns()
   self.lineActive = True
   self.lineWasActive = True
+  return d/v
 
 #
 # This moves the leg a step at a time. If it's not time to
