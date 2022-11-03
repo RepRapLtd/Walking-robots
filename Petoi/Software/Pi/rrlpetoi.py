@@ -458,7 +458,7 @@ class Leg:
   d = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
   if d < resolution:
    return
-  self.lineStepsRemaining = int(0.5 + d/self.step)
+  self.lineStepsRemaining = 1 + int(d/self.step)
   dStep = d/self.lineStepsRemaining
   self.dInc = (dStep*diff[0]/d, dStep*diff[1]/d)
   self.tStep = toNanoseconds*dStep/v

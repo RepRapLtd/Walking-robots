@@ -57,7 +57,7 @@ servos.LoadZeros('zero-angles')
 servos.GoToZeros()
 activeServos = servos.activeServos
 aToD = rrlp.AToD()
-legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left"), rrlp.Leg(servos, 9, 8, aToD, 1, "front right"), rrlp.Leg(servos, 0, 1, aToD, 2, "back left"), rrlp.Leg(servos, 6, 7, aToD, 3, "back right")]
+legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left"), rrlp.Leg(servos, 9, 8, aToD, 1, "front right"), rrlp.Leg(servos, 1, 0, aToD, 2, "back left"), rrlp.Leg(servos, 6, 7, aToD, 3, "back right")]
  
 def EditServo(servo):
  loop = True
@@ -119,13 +119,15 @@ def EditLeg(leg):
   if loop:
    symbol = menu[0]
    if symbol == "move to position":
-    posAndV = w.inputbox("Move to point at a velocity, Type - X Y V: ", default = "0 0 10").split()
-    p = (float(posAndV[0]), float(posAndV[1]))
-    v = float(posAndV[2])
-    spinFor = leg.StraightToPoint(p, v)
-    t = time.time() + 0.1 + spinFor
-    while time.time() < t:
-     leg.spin()
+    response = w.inputbox("Move to point at a velocity, Type - X Y V: ", default = "0 0 10")
+    if response[1] is 0:
+     response = response[0].split()
+     p = (float(response[0]), float(response[1]))
+     v = float(response[2])
+     spinFor = leg.StraightToPoint(p, v)
+     t = time.time() + 0.1 + spinFor
+     while time.time() < t:
+      leg.Spin()
    else:
     pass
      
