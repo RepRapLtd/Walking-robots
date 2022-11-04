@@ -344,6 +344,68 @@ class Servos:
     self.kit.servo[servo]._pwm_out.duty_cycle = 0
 
 #
+#############################################################################################
+#
+# A row cycle - the movement of the leg when walking
+#
+# The structure is [(x, y), v, sense]
+#
+# where (x, y) is the next point to move to, v is the velocity to move there, and, if sense
+# is True, check for the foot touching during the move and stop the move if it does.
+#
+
+class Row:
+
+ def __init__(self, rowFile):
+  self.rowFile = rowFile
+  i = open(rowFile)
+  self.rowPoints = []
+  firstLine = True
+  for line in i:
+   l = line.split()
+   if firstLine:
+    self.lift = float(l[0])
+    self.liftSpeed = float(l[1])
+    firstLine = False
+   else:
+    self.rowPoints.append([(float(l[0]), float(l[1])), float(l[2]), int(l[3]) == 1])
+  i.close()
+  self.rowCount = -2
+  self.yOffset = 0.0
+  
+ def NextPoint(self, currentPoint, hit):
+ 
+# If we just hit, y needs to be offset by where we are minus where we last intended to go.
+
+  if hit:
+   self.yOffset = currentPoint[0][1] - self.lastPoint[0][1]
+  else
+   self.yOffset = 0.0
+   
+  if self.rowCount == -2:
+   self.rowCount += 1
+   p = [(currentPoint[0][0] , currentPoint[0][1] + self.lift + self.yOffset), self.liftSpeed, False]
+   self.lastPoint = p
+   return p
+  elif self.rowCount == -1:
+   self.rowCount += 1
+   p = [(self.rowPoints[0][0] , currentPoint[0][1] + self.yOffset), self.liftSpeed, True]
+   self.lastPoint = p
+   return p
+  else
+   p = copy.deepcopy(self.rowPoints[self.rowCount])
+   p[0][1] += self.yOffset
+   self.rowCount += 1
+   if self.rowCount >= len(self.rowPoints):
+    self.rowCount = 0
+   self.lastPoint = p
+   return p
+   
+ def Stop():
+  self.rowCount = -2
+  self.yOffset = 0.0
+  
+#
 #############################################################################################  
 #
 # A robot leg
@@ -356,24 +418,29 @@ class Servos:
 # self.step is the increment in mm used for moving in a straight line.
 #
 # Legs work in radians.
+#
     
 class Leg:
 
- def __init__(self, servos, shoulder, foreleg, aToD, foot, name):
+ def __init__(self, servos, shoulder, foreleg, aToD, foot, name, rowFile):
   self.servos = servos
   self.shoulder = shoulder
   self.foreleg = foreleg
   self.aToD = aToD
   self.foot = foot
+  self.footThreshold = 1.5
   self.l1 = humerus
   self.l2 = ulna
   self.p = (0.0, 0.0)
+  self.v = 20.0
   self.step = 1.0
   self.lineActive = False
   self.rowActive = False
   self.lineWasActive = False
   self.rowWasActive = False
+  self.checkHit = False
   self.name = name
+  self.row = Row(rowFile)
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -569,12 +636,25 @@ class Leg:
   
  def SetFromServoAngles(self):
   self.p = self.GetPoint()
+  
+#
+# The threshold for the foot sensor
+#
 
+ def SetFootThreshold(self, v):
+  self.footThreshold = v
+  
 #
 # The voltage on the foot Hall sensor
 #
 
  def FootVoltage(self):
   return self.aToD.Voltage(self.foot)
+  
+#
+# Foot hit?
+#
+ def FootHit(self):
+  return self.FootVoltage() < self.footThreshold
   
 

@@ -57,43 +57,53 @@ servos.LoadZeros('zero-angles')
 servos.GoToZeros()
 activeServos = servos.activeServos
 aToD = rrlp.AToD()
-legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left"), rrlp.Leg(servos, 9, 8, aToD, 1, "front right"), rrlp.Leg(servos, 1, 0, aToD, 2, "back left"), rrlp.Leg(servos, 6, 7, aToD, 3, "back right")]
+
+legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left", "row-points"),\
+ rrlp.Leg(servos, 9, 8, aToD, 1, "front right", "row-points"),\
+ rrlp.Leg(servos, 1, 0, aToD, 2, "back left", "row-points"),\
+ rrlp.Leg(servos, 6, 7, aToD, 3, "back right", "row-points")]
  
 def EditServo(servo):
  loop = True
- options = ["+1", "-1", "+10", "-10", "negate direction", "save current angle as offset"]
+ options = ["+1", "-1", "+10", "-10", "set angle", "negate direction", "save current angle as offset"]
  while loop:
   menu = w.menu("Servo " + str(servo) + ", angle: " + str(servos.angle[servo]), options)
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
-   if symbol == "+1":
+   if symbol == options[0]:
     servos.SetAngle(servo, servos.angle[servo] + 1)
-   elif symbol == "-1":
+   elif symbol == options[1]:
     servos.SetAngle(servo, servos.angle[servo] - 1)
-   elif symbol == "+10":
+   elif symbol == options[2]:
     servos.SetAngle(servo, servos.angle[servo] + 10)
-   elif symbol == "-10":
+   elif symbol == options[3]:
     servos.SetAngle(servo, servos.angle[servo] - 10)
-   elif symbol == "negate direction":
+   elif symbol == options[4]:
+    a = str(servos.angle[servo])
+    response = w.inputbox("Current angle is " + a + ", set it to: ", default = a)
+     if response[1] is 0:
+      a = float(response[0])
+      servos.SetAngle(a)
+   elif symbol == options[5]:
     servos.InvertDirection(servo)
-   elif symbol == "save current angle as offset":
+   elif symbol == options[6]:
     servos.MakeCurrentPositionZero(servo)
    else:
     w.msgbox("Dud option: " + symbol)
    
    
-def ChooseServo(active):
+def ChooseServo():
  loop = True
- a = ["Save current positions as zeros"]
- for s in active:
-  a.append(str(s))
+ options = ["Save current positions as zeros"]
+ for s in activeServos:
+  options.append(str(s))
  while loop:
-  menu = w.menu("Choose servo", a)
+  menu = w.menu("Choose servo", options)
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
-   if symbol == a[0]:
+   if symbol == options[0]:
     for servo in range(rrlp.servoCount):
      servos.MakeCurrentPositionZero(servo)
     servos.SaveZeros()
@@ -113,13 +123,15 @@ def GetLegFromName(name):
     
 def EditLeg(leg):
  loop = True
+ options = ["move to position", "row", "load row", "calibrate foot", "calibrate horizontal"]
  while loop:
-  menu = w.menu(leg.name + " leg, at (x, y): " + str(leg.p), ["move to position", "set horizontal", "b"])
+  p = str(leg.p)
+  menu = w.menu(leg.name + " leg, at (x, y): " + p, options)
   loop = menu[1] is 0
   if loop:
    symbol = menu[0]
-   if symbol == "move to position":
-    response = w.inputbox("Move to point at a velocity, Type - X Y V: ", default = "0 0 10")
+   if symbol == options[0]:
+    response = w.inputbox("Currently at " + p + ". Move to a point at a velocity, Type - X Y V: ", default = p + " 20")
     if response[1] is 0:
      response = response[0].split()
      p = (float(response[0]), float(response[1]))
@@ -128,8 +140,27 @@ def EditLeg(leg):
      t = time.time() + 0.1 + spinFor
      while time.time() < t:
       leg.Spin()
-   else:
+   elif symbol == options[1]:
+    response = w.inputbox("Row for how many cycles? ", default = "1")
+    if response[1] is 0:
+     cycles = int(response[0])
+     spinFor = leg.RowCycleTime()*cycles
+     t = time.time() + 1 + spinFor
+     leg.Row()
+     while time.time() < t:
+      leg.Spin()
+   elif symbol == options[2]:
     pass
+   elif symbol == options[3]:
+    w.msgbox("Lift the " + leg.name + " foot")
+    v0 = leg.FootVoltage()
+    w.msgbox("Release the" + leg.name + " foot")
+    v1 = leg.FootVoltage()
+    v = (v0 + v1)*0.5
+    leg.SetFootThreshold(v)
+    w.msgbox(leg.name + " foot threshold set to " + str(v) + "V from " + str(v0) + "V (lifted) and " + str(v1) + "V (released).")
+    
+
      
     
 def ChooseLeg(legs):
