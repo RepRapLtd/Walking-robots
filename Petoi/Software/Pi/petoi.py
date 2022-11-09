@@ -86,9 +86,9 @@ def EditServo(servo):
    elif symbol == options[4]:
     a = str(servos.angle[servo])
     response = w.inputbox("Current angle is " + a + ", set it to: ", default = a)
-     if response[1] is 0:
-      a = float(response[0])
-      servos.SetAngle(a)
+    if response[1] is 0:
+     a = float(response[0])
+     servos.SetAngle(a)
    elif symbol == options[5]:
     servos.InvertDirection(servo)
    elif symbol == options[6]:

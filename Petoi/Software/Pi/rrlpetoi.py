@@ -360,12 +360,13 @@ class Row:
   firstLine = True
   for line in i:
    l = line.split()
-   if firstLine:
-    self.lift = float(l[0])
-    self.liftSpeed = float(l[1])
-    firstLine = False
-   else:
-    self.rowPoints.append([(float(l[0]), float(l[1])), float(l[2]), int(l[3]) == 1])
+   if len(l) > 1:
+    if firstLine:
+     self.lift = float(l[0])
+     self.liftSpeed = float(l[1])
+     firstLine = False
+    else:
+     self.rowPoints.append([(float(l[0]), float(l[1])), float(l[2]), int(l[3]) == 1])
   i.close()
   self.rowCount = -2
   self.yOffset = 0.0
@@ -376,7 +377,7 @@ class Row:
 
   if hit:
    self.yOffset = currentPoint[0][1] - self.lastPoint[0][1]
-  else
+  else:
    self.yOffset = 0.0
    
   if self.rowCount == -2:
@@ -389,7 +390,7 @@ class Row:
    p = [(self.rowPoints[0][0] , currentPoint[0][1] + self.yOffset), self.liftSpeed, True]
    self.lastPoint = p
    return p
-  else
+  else:
    p = copy.deepcopy(self.rowPoints[self.rowCount])
    p[0][1] += self.yOffset
    self.rowCount += 1
@@ -407,8 +408,8 @@ class Row:
   previous = self.rowPoints[len(self.rowPoints) - 1]
   for point in self.rowPoints:
    p = point[0]
-   pOld = previoous[0]
-   diff = (p[0] - previous[0], p[1] - previous[1])
+   pOld = previous[0]
+   diff = (p[0] - pOld[0], p[1] - pOld[1])
    diff = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
    totalT += diff/previous[1]
    previous = point
@@ -447,10 +448,11 @@ class Leg:
   self.rowActive = False
   self.lineWasActive = False
   self.rowWasActive = False
-  self.checkHit = False
+  self.watchFoot = False
   self.name = name
   self.row = Row(rowFile)
   self.err = ""
+  self.point = [(0, 0), 0, False]
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -590,9 +592,12 @@ class Leg:
    return
   if self.lineActive:
    return
-  rowPoint = self.row.NextPoint(self.point, self.FootHit())
+  rowPoint = self.row.NextPoint(self.point, self.watchFoot)
   self.StraightToPoint(rowPoint)
-  
+
+ def Row(self):
+  self.rowActive = True
+
 #
 # Is the leg doing anything?
 #
