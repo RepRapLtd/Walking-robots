@@ -42,10 +42,6 @@ import math as maths
 from adafruit_servokit import ServoKit
 import smbus
 
-# Report stuff
-
-debug = True
-
 # Number of servos potentially controllable by the PCA9685 PWM controller in the robot
 
 servoCount = 16
@@ -129,15 +125,16 @@ class AToD:
   self.address = 0x4c         # I2C chip address
 #  self.mode = 0x5f            # Register 0x01 mode select - single aquisition
   self.mode = 0x1f            # Register 0x01 mode select - repeated aquisition
-  err = ""
+  self.err = ""
 
   try:
    if self.bus.read_byte_data(self.address, 0x01) != self.mode: # If current IC mode != program mode
     self.bus.write_byte_data(self.address, 0x01, self.mode)    # Initializes the IC and set mode
     self.bus.write_byte_data(self.address, 0x02, 0x00)    # Trigger a initial data collection
     time.sleep(1)				# Wait a sec, just for init
-  except (IOError, err):
-   print(err)
+  except (IOError, self.err):
+   pass
+
    
 # Check for a specific bit value
    
@@ -405,6 +402,18 @@ class Row:
   self.rowCount = -2
   self.yOffset = 0.0
   
+ def RowCycleTime(self):
+  totalT = 0.0
+  previous = self.rowPoints[len(self.rowPoints) - 1]
+  for point in self.rowPoints:
+   p = point[0]
+   pOld = previoous[0]
+   diff = (p[0] - previous[0], p[1] - previous[1])
+   diff = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
+   totalT += diff/previous[1]
+   previous = point
+  return totalT  
+  
 #
 #############################################################################################  
 #
@@ -441,6 +450,7 @@ class Leg:
   self.checkHit = False
   self.name = name
   self.row = Row(rowFile)
+  self.err = ""
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -463,11 +473,13 @@ class Leg:
 # Reverse kinematics; returns radians. Given the position of the foot in leg coordinates
 # this gives the angles needed to put it there. The output is
 #
-#  [Success/fail, (a1, a2), (a3, a4)]
+#  [(a1, a2), (a3, a4)]
 #
-# The first is a boolean that tells you if the position is atainable. The second and third
+# The first is a boolean that tells you if the position is atainable. The first and second
 # are pairs of angles for the shoulder and forearm servos. There are always two solutions of none.
 # The robot uses the second returned solution, which is the one where the knee points backwards.
+#
+# If the position can't be attained self.err is set to an error message.
 #
 # Derived from:
 #
@@ -475,14 +487,14 @@ class Leg:
 
 
  def AnglesFromPosition(self, position):
+  self.err = ""
   l12 = self.l1*self.l1
   l22 = self.l2*self.l2
   xp2 = position[0]*position[0]
   yp2 = position[1]*position[1]
   sigma = -l12*l12 + 2*l12*l22 +2*l12*xp2 + 2*l12*yp2 - l22*l22 +2*l22*xp2 + 2*l22*yp2 - xp2*xp2 -2*xp2*yp2 -yp2*yp2
   if sigma < 0.0:
-   if debug:
-    print("No reverse kinematic solution for position " + str(position))
+   self.err = "No reverse kinematic solution for position " + str(position)
    return [False, (0, 0), (0, 0)]
   sigma = maths.sqrt(sigma)
   div = l12 + 2*self.l1*position[0] - l22 + xp2 + yp2
@@ -490,8 +502,7 @@ class Leg:
   a1m = 2*maths.atan2(2*self.l1*position[1] - sigma, div)
   sigma = (-l12 + 2*self.l1*self.l2 - l22 + xp2 + yp2)*(l12 + 2*self.l1*self.l2 + l22 - xp2 - yp2)
   if sigma < 0.0:
-   if debug:
-    print("No reverse kinematic solution for position " + str(position))
+   self.err = "No reverse kinematic solution for position " + str(position)
    return [False, (0, 0), (0, 0)]
   sigma = maths.sqrt(sigma)
   div = -l12 + 2*self.l1*self.l2 - l22 + xp2 + yp2
@@ -502,16 +513,25 @@ class Leg:
 # Go fast to a point in robot coordinates.
 #
 
- def QuickToPoint(self, p):
+ def QuickToPoint(self, point):
+  p = point[0]
   p1 = self.RobotToLegCoordinates(p)
   angles = self.AnglesFromPosition(p1)
-  if angles[0]:
+  if self.err == "":
    a = ToDegrees(angles[2])
    self.servos.SetAngle(self.shoulder, a[0])
    self.servos.SetAngle(self.foreleg, a[1])
-   self.p = p
-  else:
-   print("No can do")
+   self.point = point
+   
+# Ifs split to avoid unnescessary A to D calls
+  
+  if point[2]:
+   if self.FootHit():
+    self.lineStepsRemaining = 0
+    self.lineActive = False
+    self.lineWasActive = False
+    self.watchFoot = False
+   
    
 #
 # Move in a straight line to p at v mm/s.
@@ -520,8 +540,11 @@ class Leg:
 # but that's what the Python time class gives us.
 # Returns the time in seconds that the move will take.
 
- def StraightToPoint(self, p, v):
-  diff = (p[0] - self.p[0], p[1] - self.p[1])
+ def StraightToPoint(self, point):
+  p = point[0]
+  v = point[1]
+  currentPoint = self.point[0]
+  diff = (p[0] - currentPoint[0], p[1] - currentPoint[1])
   d = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
   if d < resolution:
    return
@@ -532,6 +555,7 @@ class Leg:
   self.nextLineStepTime = time.monotonic_ns()
   self.lineActive = True
   self.lineWasActive = True
+  self.watchFoot = point[2]
   return d/v
 
 #
@@ -545,24 +569,16 @@ class Leg:
   t = time.monotonic_ns()
   if t < self.nextLineStepTime:
    return
-  p = (self.p[0] + self.dInc[0], self.p[1] + self.dInc[1])
-  self.QuickToPoint(p)
+  currentPoint = self.point[0]
+  p = (currentPoint[0] + self.dInc[0], currentPoint[1] + self.dInc[1])
+  self.QuickToPoint([p, 0, self.watchFoot])
   self.lineStepsRemaining -= 1
   if self.lineStepsRemaining <= 0:
    self.lineActive = False
    self.lineWasActive = False
+   self.watchFoot = False
    return
   self.nextLineStepTime += self.tStep
-
-#
-# Set up a loop of lines representing a row.
-#
-   
- def Row(self, rowPoints):
-  self.rowPoints = rowPoints
-  self.nextRowSegment = 0
-  self.rowActive = True
-  self.rowWasActive = True
 
 #
 # This increments the row to the next line segment if the last
@@ -574,9 +590,8 @@ class Leg:
    return
   if self.lineActive:
    return
-  pv = self.rowPoints[self.nextRowSegment]
-  self.StraightToPoint(pv[0], pv[1])
-  self.nextRowSegment = (self.nextRowSegment + 1) % len(self.rowPoints)
+  rowPoint = self.row.NextPoint(self.point, self.FootHit())
+  self.StraightToPoint(rowPoint)
   
 #
 # Is the leg doing anything?
@@ -613,13 +628,19 @@ class Leg:
   if self.lineActive:
    self.nextLineStepTime = time.monotonic_ns() 
   self.rowActive = self.rowWasActive
+  
+ def Stop(self):
+  self.Pause()
+  self.lineStepsRemaining = 0
+  self.watchFoot = False
+  self.row.Stop()
    
 #
 # Where is the foot?
 #
 
  def Position(self):
-  return self.p
+  return self.point[0]
 
 #
 # Where is the foot, given the servo angles? Mainly for debugging.
@@ -635,7 +656,7 @@ class Leg:
 #
   
  def SetFromServoAngles(self):
-  self.p = self.GetPoint()
+  self.point = [self.GetPoint(), 0, False]
   
 #
 # The threshold for the foot sensor

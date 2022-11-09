@@ -56,7 +56,11 @@ servos = rrlp.Servos()
 servos.LoadZeros('zero-angles')
 servos.GoToZeros()
 activeServos = servos.activeServos
+
 aToD = rrlp.AToD()
+if aToD.err != "":
+ w.msgbox("A to D initialisation error: " + aToD.err)
+
 
 legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left", "row-points"),\
  rrlp.Leg(servos, 9, 8, aToD, 1, "front right", "row-points"),\
@@ -125,7 +129,7 @@ def EditLeg(leg):
  loop = True
  options = ["move to position", "row", "load row", "calibrate foot", "calibrate horizontal"]
  while loop:
-  p = str(leg.p)
+  p = str(leg.point[0])
   menu = w.menu(leg.name + " leg, at (x, y): " + p, options)
   loop = menu[1] is 0
   if loop:
@@ -136,7 +140,7 @@ def EditLeg(leg):
      response = response[0].split()
      p = (float(response[0]), float(response[1]))
      v = float(response[2])
-     spinFor = leg.StraightToPoint(p, v)
+     spinFor = leg.StraightToPoint([p, v, False])
      t = time.time() + 0.1 + spinFor
      while time.time() < t:
       leg.Spin()
@@ -144,11 +148,12 @@ def EditLeg(leg):
     response = w.inputbox("Row for how many cycles? ", default = "1")
     if response[1] is 0:
      cycles = int(response[0])
-     spinFor = leg.RowCycleTime()*cycles
-     t = time.time() + 1 + spinFor
+     spinFor = leg.row.RowCycleTime()*cycles
+     t = time.time() + 2 + spinFor
      leg.Row()
      while time.time() < t:
       leg.Spin()
+     leg.Stop()
    elif symbol == options[2]:
     pass
    elif symbol == options[3]:
@@ -159,9 +164,9 @@ def EditLeg(leg):
     v = (v0 + v1)*0.5
     leg.SetFootThreshold(v)
     w.msgbox(leg.name + " foot threshold set to " + str(v) + "V from " + str(v0) + "V (lifted) and " + str(v1) + "V (released).")
+   else:
+    w.msgbox(leg.name + " calibrate horizontal.")
     
-
-     
     
 def ChooseLeg(legs):
  loop = True
