@@ -173,14 +173,14 @@ class AToD:
   r1 = self.bus.read_byte_data(self.address, 0x01) # Control - mode select
   r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
   r5 = self.bus.read_byte_data(self.address, 0x05) # Temp. Int. LSB
-  r6 = self.bus.read_byte_data(self.address, 0x06) # V1, V1 - V2 or TR1 MSB
-  r7 = self.bus.read_byte_data(self.address, 0x07) # V1, V1 - V2 or TR1 LSB
-  r8 = self.bus.read_byte_data(self.address, 0x08) # V2, V1 - V2 or TR1 MSB
-  r9 = self.bus.read_byte_data(self.address, 0x09) # V2, V1 - V2 or TR1 LSB
-  ra = self.bus.read_byte_data(self.address, 0x0a) # V3, V3 - V4 or TR2 MSB
-  rb = self.bus.read_byte_data(self.address, 0x0b) # V3, V3 - V4 or TR2 LSB
-  rc = self.bus.read_byte_data(self.address, 0x0c) # V4, V3 - V4 or TR2 MSB
-  rd = self.bus.read_byte_data(self.address, 0x0d) # V4, V3 - V4 or TR2 LSB
+  r6 = self.bus.read_byte_data(self.address, 0x06) # V0 MSB
+  r7 = self.bus.read_byte_data(self.address, 0x07) # V0 LSB
+  r8 = self.bus.read_byte_data(self.address, 0x08) # V1 MSB
+  r9 = self.bus.read_byte_data(self.address, 0x09) # V1 LSB
+  ra = self.bus.read_byte_data(self.address, 0x0a) # V2 MSB
+  rb = self.bus.read_byte_data(self.address, 0x0b) # V2 LSB
+  rc = self.bus.read_byte_data(self.address, 0x0c) # V3 MSB
+  rd = self.bus.read_byte_data(self.address, 0x0d) # V3 LSB
   re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
   rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
   result = "Status register: " + hex(r0) + "\n"
@@ -191,15 +191,7 @@ class AToD:
   result += "Voltage V2 : " + str(self.GetVoltage(ra,rb)) + " V\n"
   result += "Voltage V3 : " + str(self.GetVoltage(rc,rd)) + " V\n" 
   result += "Supply: " + str(self.GetVoltage(re,rf) + 2.5) + " V\n"
-
-  # If you want to use TR, use the temperature(msb,lsb) function to get the
-  # value. I.e., if you have set the mode TR1 & TR2 (mode 0x5d),
-  # Comment the print "Voltage" lines and uncomment these ones:
-  # TR1
-  # print "Temperature TR1: %s Celsius" %temperature(r6,r7)
-  # TR2
-  # print "Temperature TR2: %s Celsius" %temperature(ra,rb)
-  
+ 
   return result
 
 #
@@ -229,6 +221,7 @@ class AToD:
 # self.direction - +/-1 multiplies self.angle to get the servo moving the right way
 #
 # Servos work in degrees.
+#
  
 class Servos:
 
@@ -241,7 +234,7 @@ class Servos:
   self.activeServos = []
 
 #
-# Get the offsets and directions from the file zero-angles.
+# Get the offsets and directions from a file.
 #
 
  def LoadZeros(self, zeroFile):
@@ -350,10 +343,13 @@ class Servos:
 # where (x, y) is the next point to move to, v is the velocity to move there, and, if sense
 # is True, check for the foot touching during the move and stop the move if it does.
 #
+# Row has a lead in: go vertically up from the current point; move across to above the start point;
+# move down to the start point. Then the row cycles. Calling stop causes it to repeat the lead in next time.
+#
 
 class Row:
 
- def __init__(self, rowFile):
+ def __init__(self, rowFile, currentPoint):
   self.rowFile = rowFile
   i = open(rowFile)
   self.rowPoints = []
@@ -370,6 +366,11 @@ class Row:
   i.close()
   self.rowCount = -2
   self.yOffset = 0.0
+  self.lastPoint = currentPoint
+  
+#
+# Return the next point to move to
+#
   
  def NextPoint(self, currentPoint, hit):
  
@@ -399,9 +400,17 @@ class Row:
    self.lastPoint = p
    return p
    
+#
+# Reset the row so it'll start from the lead in next time.
+#
+   
  def Stop():
   self.rowCount = -2
   self.yOffset = 0.0
+  
+#
+# How long does one cycle take (ignoring lead in, which cannot be known in advance)
+#
   
  def RowCycleTime(self):
   totalT = 0.0
@@ -424,7 +433,7 @@ class Row:
 # foot is the analogue channel for the foot hall-effect sensor
 # servos is the class above.
 #
-# self.p is the current foot position in robot coordinates.
+# self.point is the current foot position in robot coordinates.
 # self.step is the increment in mm used for moving in a straight line.
 #
 # Legs work in radians.
@@ -441,18 +450,18 @@ class Leg:
   self.footThreshold = 1.5
   self.l1 = humerus
   self.l2 = ulna
-  self.p = (0.0, 0.0)
+  #self.p = (0.0, 0.0)
   self.v = 20.0
   self.step = 1.0
   self.lineActive = False
   self.rowActive = False
   self.lineWasActive = False
   self.rowWasActive = False
-  self.watchFoot = False
+  self.checkHit = False
   self.name = name
-  self.row = Row(rowFile)
+  self.point = [self.GetPoint(), 0, False]
+  self.row = Row(rowFile, self.point)
   self.err = ""
-  self.point = [(0, 0), 0, False]
 
 # The leg kinematic coordinate system has x down the straight leg,
 # y forward parallel to the ground. But the robot deals with the
@@ -512,7 +521,7 @@ class Leg:
   return [True, (a1p, -a2p), (a1m, a2p)]
 
 #
-# Go fast to a point in robot coordinates.
+# Go fast to a point in robot coordinates, checking for foot hit at the end if required.
 #
 
  def QuickToPoint(self, point):
@@ -536,11 +545,12 @@ class Leg:
    
    
 #
-# Move in a straight line to p at v mm/s.
+# Move in a straight line to point.
 # The first function sets up the needed variables.
 # Everything works in nanoseconds, which is a bit OTT,
 # but that's what the Python time class gives us.
 # Returns the time in seconds that the move will take.
+#
 
  def StraightToPoint(self, point):
   p = point[0]
@@ -592,7 +602,7 @@ class Leg:
    return
   if self.lineActive:
    return
-  rowPoint = self.row.NextPoint(self.point, self.watchFoot)
+  rowPoint = self.row.NextPoint(self.point, self.FootHit())
   self.StraightToPoint(rowPoint)
 
  def Row(self):
