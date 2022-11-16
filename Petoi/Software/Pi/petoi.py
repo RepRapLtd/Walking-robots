@@ -88,7 +88,7 @@ def EditServo(servo):
     response = w.inputbox("Current angle is " + a + ", set it to: ", default = a)
     if response[1] is 0:
      a = float(response[0])
-     servos.SetAngle(a)
+     servos.SetAngle(servo, a)
    elif symbol == options[5]:
     servos.InvertDirection(servo)
    elif symbol == options[6]:
@@ -99,7 +99,7 @@ def EditServo(servo):
    
 def ChooseServo():
  loop = True
- options = ["Save current positions as zeros"]
+ options = ["Zero servos", "Save current positions as zeros"]
  for s in activeServos:
   options.append(str(s))
  while loop:
@@ -108,6 +108,8 @@ def ChooseServo():
   if loop:
    symbol = menu[0]
    if symbol == options[0]:
+    servos.GoToZeros()
+   elif symbol == options[1]:
     for servo in range(rrlp.servoCount):
      servos.MakeCurrentPositionZero(servo)
     servos.SaveZeros()
@@ -168,7 +170,7 @@ def EditLeg(leg):
     w.msgbox(leg.name + " calibrate horizontal.")
     
     
-def ChooseLeg(legs):
+def ChooseLeg():
  loop = True
  names = []
  for leg in legs:
@@ -186,9 +188,9 @@ while loop:
  loop = menu[1] is 0
  if loop:
   if menu[0] == "servos":
-   ChooseServo(activeServos)
+   ChooseServo()
   else:
-   ChooseLeg(legs)
+   ChooseLeg()
  
  
  

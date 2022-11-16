@@ -362,7 +362,7 @@ class Row:
      self.liftSpeed = float(l[1])
      firstLine = False
     else:
-     self.rowPoints.append([(float(l[0]), float(l[1])), float(l[2]), int(l[3]) == 1])
+     self.rowPoints.append([(float(l[0]), float(l[1])), float(l[2]), int(l[3]) != 0])
   i.close()
   self.rowCount = -2
   self.yOffset = 0.0
@@ -384,21 +384,17 @@ class Row:
   if self.rowCount == -2:
    self.rowCount += 1
    p = [(currentPoint[0][0] , currentPoint[0][1] + self.lift + self.yOffset), self.liftSpeed, False]
-   self.lastPoint = p
-   return p
   elif self.rowCount == -1:
    self.rowCount += 1
    p = [(self.rowPoints[0][0] , currentPoint[0][1] + self.yOffset), self.liftSpeed, True]
-   self.lastPoint = p
-   return p
   else:
    p = copy.deepcopy(self.rowPoints[self.rowCount])
    p[0][1] += self.yOffset
    self.rowCount += 1
    if self.rowCount >= len(self.rowPoints):
     self.rowCount = 0
-   self.lastPoint = p
-   return p
+  self.lastPoint = p
+  return p
    
 #
 # Reset the row so it'll start from the lead in next time.
@@ -556,6 +552,7 @@ class Leg:
   p = point[0]
   v = point[1]
   currentPoint = self.point[0]
+  print(str(p) + "..." + str(currentPoint))
   diff = (p[0] - currentPoint[0], p[1] - currentPoint[1])
   d = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
   if d < resolution:
