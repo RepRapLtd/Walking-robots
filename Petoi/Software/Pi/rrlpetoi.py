@@ -401,7 +401,7 @@ class Row:
 # Reset the row so it'll start from the lead in next time.
 #
    
- def Stop():
+ def Stop(self):
   self.rowCount = -2
   self.yOffset = 0.0
   
