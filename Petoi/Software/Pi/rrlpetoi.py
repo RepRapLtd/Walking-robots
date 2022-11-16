@@ -383,13 +383,14 @@ class Row:
    
   if self.rowCount == -2:
    self.rowCount += 1
-   p = [(currentPoint[0][0] , currentPoint[0][1] + self.lift + self.yOffset), self.liftSpeed, False]
+   p = [(currentPoint[0][0], currentPoint[0][1] + self.lift + self.yOffset), self.liftSpeed, False]
   elif self.rowCount == -1:
    self.rowCount += 1
-   p = [(self.rowPoints[0][0] , currentPoint[0][1] + self.yOffset), self.liftSpeed, True]
+   p = self.rowPoints[0]
+   p = [(p[0][0], currentPoint[0][1] + self.yOffset), self.liftSpeed, True]
   else:
-   p = copy.deepcopy(self.rowPoints[self.rowCount])
-   p[0][1] += self.yOffset
+   p = self.rowPoints[self.rowCount]
+   p = [(p[0][0], p[0][1] + self.yOffset), p[1], p[2]]
    self.rowCount += 1
    if self.rowCount >= len(self.rowPoints):
     self.rowCount = 0
@@ -552,7 +553,6 @@ class Leg:
   p = point[0]
   v = point[1]
   currentPoint = self.point[0]
-  print(str(p) + "..." + str(currentPoint))
   diff = (p[0] - currentPoint[0], p[1] - currentPoint[1])
   d = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
   if d < resolution:
@@ -689,5 +689,34 @@ class Leg:
 #
  def FootHit(self):
   return self.FootVoltage() < self.footThreshold
+  
+#####################################################################################################
+#
+# The whole robot
+#
+'''
+class robot:
+
+ def __init__(self):
+  self.err = ""
+  self.servos = Servos()
+  self.servos.LoadZeros('zero-angles')
+  self.servos.GoToZeros()
+  self.aToD = AToD()
+  self.err = aToD.err
+
+  self.legs = [Leg(servos, 14, 15, aToD, 0, "front left", "row-points"),\
+   Leg(servos, 9, 8, aToD, 1, "front right", "row-points"),\
+   Leg(servos, 1, 0, aToD, 2, "back left", "row-points"),\
+   Leg(servos, 6, 7, aToD, 3, "back right", "row-points")]
+   
+ def GetLegFromName(name):
+  for leg in legs:
+   if leg.name == name:
+    return leg
+  self.err = "There's no leg called " + name + ". Returning legs[0]."
+  return legs[0]
+'''
+
   
 
