@@ -171,7 +171,7 @@ class AToD:
  def GetAllValues(self):
   if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
-   time.sleep(0.1)
+   time.sleep(0.1) # 100 ms is horribly long...
   r0 = self.bus.read_byte_data(self.address, 0x00) # Status
   r1 = self.bus.read_byte_data(self.address, 0x01) # Control - mode select
   r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
@@ -188,7 +188,7 @@ class AToD:
   rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
   result = "Status register: " + hex(r0) + "\n"
   result += "Control register: " + hex(r1) + "\n"
-  result += "Int. Temp. : " + str(self.GetTemperature(r4,r5)) + " Celsius\n"
+  result += "Chip temp. : " + str(self.GetTemperature(r4,r5)) + "C\n"
   result += "Voltage V0 : " + str(self.GetVoltage(r6,r7)) + " V\n"
   result += "Voltage V1 : " + str(self.GetVoltage(r8,r9)) + " V\n"
   result += "Voltage V2 : " + str(self.GetVoltage(ra,rb)) + " V\n"
@@ -206,7 +206,7 @@ class AToD:
   lsb = msb + 1
   if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
-   time.sleep(0.1) # 100 ms is horribly long...
+   time.sleep(0.1)
   msb = self.bus.read_byte_data(self.address, msb)
   lsb = self.bus.read_byte_data(self.address, lsb)  
   return self.GetVoltage(msb, lsb)
@@ -218,7 +218,7 @@ class AToD:
  def Temperature(self):
   if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
-   time.sleep(0.1) # 100 ms is horribly long...
+   time.sleep(0.1)
   r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
   r5 = self.bus.read_byte_data(self.address, 0x05) # Temp. Int. LSB
   return self.GetTemperature(r4,r5)
@@ -230,7 +230,7 @@ class AToD:
  def SupplyVoltage(self):
   if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
-   time.sleep(0.1) # 100 ms is horribly long...
+   time.sleep(0.1)
   re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
   rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
   return self.GetVoltage(re,rf) + 2.5     
@@ -562,7 +562,6 @@ class Leg:
   self.footThreshold = 1.5
   self.l1 = humerus
   self.l2 = ulna
-  #self.p = (0.0, 0.0)
   self.v = 20.0
   self.step = 1.0
   self.lineActive = False
@@ -598,7 +597,7 @@ class Leg:
 #
 #  [(a1, a2), (a3, a4)]
 #
-# The first is a boolean that tells you if the position is atainable. The first and second
+# If self.err is not "" then the position is not atainable. The first and second
 # are pairs of angles for the shoulder and forearm servos. There are always two solutions of none.
 # The robot uses the second returned solution, which is the one where the knee points backwards.
 #
@@ -618,7 +617,7 @@ class Leg:
   sigma = -l12*l12 + 2*l12*l22 +2*l12*xp2 + 2*l12*yp2 - l22*l22 +2*l22*xp2 + 2*l22*yp2 - xp2*xp2 -2*xp2*yp2 -yp2*yp2
   if sigma < 0.0:
    self.err = "No reverse kinematic solution for position " + str(position)
-   return [False, (0, 0), (0, 0)]
+   return [(0, 0), (0, 0)]
   sigma = maths.sqrt(sigma)
   div = l12 + 2*self.l1*position[0] - l22 + xp2 + yp2
   a1p = 2*maths.atan2(2*self.l1*position[1] + sigma, div)
@@ -626,11 +625,11 @@ class Leg:
   sigma = (-l12 + 2*self.l1*self.l2 - l22 + xp2 + yp2)*(l12 + 2*self.l1*self.l2 + l22 - xp2 - yp2)
   if sigma < 0.0:
    self.err = "No reverse kinematic solution for position " + str(position)
-   return [False, (0, 0), (0, 0)]
+   return [(0, 0), (0, 0)]
   sigma = maths.sqrt(sigma)
   div = -l12 + 2*self.l1*self.l2 - l22 + xp2 + yp2
   a2p = 2*maths.atan2(sigma, div)
-  return [True, (a1p, -a2p), (a1m, a2p)]
+  return [(a1p, -a2p), (a1m, a2p)]
 
 #
 # Go fast to a point in robot coordinates, checking for foot hit at the end if required.
@@ -641,7 +640,7 @@ class Leg:
   p1 = self.RobotToLegCoordinates(p)
   angles = self.AnglesFromPosition(p1)
   if self.err == "":
-   a = ToDegrees(angles[2])
+   a = ToDegrees(angles[1])
    self.servos.SetAngle(self.shoulder, a[0])
    self.servos.SetAngle(self.foreleg, a[1])
    self.point = point
@@ -755,7 +754,11 @@ class Leg:
   if self.lineActive:
    self.nextLineStepTime = time.monotonic_ns() 
   self.rowActive = self.rowWasActive
-  
+
+#
+# Stop the leg completely
+#
+
  def Stop(self):
   self.Pause()
   self.lineStepsRemaining = 0

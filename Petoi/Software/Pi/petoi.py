@@ -178,17 +178,46 @@ def ChooseLeg():
   if loop:
    EditLeg(GetLegFromName(menu[0]))
    
+def DoCamera():
+ response = w.inputbox("Picture file name (must end in .jpg):", default = "snap.jpg")
+ if response[1] is 0:
+  response = response[0]
+  robot.camera.SnapToFile(response)
+  w.msgbox("Image saved in " + response)
+
+def DoAccelerometer():
+ a = robot.accelerometer.Accelerations()
+ g = robot.accelerometer.Gyro()
+ t = robot.accelerometer.Temperature()
+ w.msgbox("Accelerations: " + str(a) + "\nGyros: " + str(g) + "\nChip temp: " + str(t) + " C")
+
+def DoRange():
+ d = robot.range.Distance()
+ w.msgbox("Range is " + str(d) + "mm") 
+ 
+def DoVoltages():
+ w.msgbox(robot.aToD.GetAllValues()) 
 
 loop = True
+options = ["servos", "legs", "camera", "accelerometer", "range", "voltages"]
 while loop:
- menu = w.menu("Control", ["servos", "legs"])
+ menu = w.menu("Control", options)
  loop = menu[1] is 0
  if loop:
-  if menu[0] == "servos":
+  if menu[0] == options[0]:
    ChooseServo()
-  else:
+  elif menu[0] == options[1]:
    ChooseLeg()
- 
+  elif menu[0] == options[2]:
+   DoCamera()
+  elif menu[0] == options[3]:
+   DoAccelerometer()
+  elif menu[0] == options[4]:
+   DoRange()
+  elif menu[0] == options[5]:
+   DoVoltages()
+  else:      
+   w.msgbox("Dud option: " + menu[0])
 
 robot.Shutdown()
 
