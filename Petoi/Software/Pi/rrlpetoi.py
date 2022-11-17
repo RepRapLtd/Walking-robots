@@ -249,10 +249,11 @@ class Range:
   self.tof = VL53L0X.VL53L0X(i2c_bus=1,i2c_address=0x29)
   # I2C Address can change before tof.open()
   # tof.change_address(0x32)
-  self.tof.open()
+  #self.tof.open()
 
   
  def Distance(self):
+  self.tof.open()
   self.tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
 
   #timing = tof.get_timing()
@@ -268,12 +269,13 @@ class Range:
   #time.sleep(timing/1000000.00)
 
   self.tof.stop_ranging()
-  #self.tof.close()
+  self.tof.close()
   return self.distance
   
- def ShutDown(self):
-  self.tof.stop_ranging()
-  self.tof.close()
+ def Shutdown(self):
+  pass
+  #self.tof.stop_ranging()
+  #self.tof.close()
   
 ##################################################################################################
 #
@@ -347,6 +349,8 @@ class Servos:
   self.direction = [1.0]*servoCount
   self.backedUp = False
   self.activeServos = []
+  for servo in range(servoCount):
+   self.kit.servo[servo].actuation_range = 270
 
 #
 # Get the offsets and directions from a file.
