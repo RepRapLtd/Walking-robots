@@ -253,14 +253,14 @@ class Range:
 
   
  def Distance(self):
-  tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
+  self.tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
 
   #timing = tof.get_timing()
   #if timing < 20000:
    #timing = 20000
   #print("Timing %d ms" % (timing/1000))
 
-  self.distance = tof.get_distance()
+  self.distance = self.tof.get_distance()
   
   #if distance > 0:
   #  print("%d mm, %d cm, %d" % (distance, (distance/10), count))
@@ -284,7 +284,7 @@ class Accelerometer:
 
  def  __init__(self):
   self.i2c = board.I2C()
-  self.mpu = adafruit_mpu6050.MPU6050(i2c)
+  self.mpu = adafruit_mpu6050.MPU6050(self.i2c)
   
  def Accelerations(self):
   return self.mpu.acceleration
@@ -822,7 +822,7 @@ class Robot:
   self.servos.LoadZeros('zero-angles')
   self.servos.GoToZeros()
   self.aToD = AToD()
-  self.err = aToD.err
+  self.err = self.aToD.err
 
   self.legs = [Leg(self.servos, 14, 15, self.aToD, 0, "front left", "row-points"),\
    Leg(self.servos, 9, 8, self.aToD, 1, "front right", "row-points"),\
