@@ -52,20 +52,17 @@ import rrlpetoi as rrlp
 
 w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="https://reprapltd.com")
 
-servos = rrlp.Servos()
-servos.LoadZeros('zero-angles')
-servos.GoToZeros()
+robot = rrlp.Robot()
+
+servos = robot.servos
 activeServos = servos.activeServos
 
-aToD = rrlp.AToD()
+aToD = robot.aToD
 if aToD.err != "":
  w.msgbox("A to D initialisation error: " + aToD.err)
 
 
-legs = [rrlp.Leg(servos, 14, 15, aToD, 0, "front left", "row-points"),\
- rrlp.Leg(servos, 9, 8, aToD, 1, "front right", "row-points"),\
- rrlp.Leg(servos, 1, 0, aToD, 2, "back left", "row-points"),\
- rrlp.Leg(servos, 6, 7, aToD, 3, "back right", "row-points")]
+legs = robot.legs
  
 def EditServo(servo):
  loop = True
@@ -145,7 +142,7 @@ def EditLeg(leg):
      spinFor = leg.StraightToPoint([p, v, False])
      t = time.time() + 0.1 + spinFor
      while time.time() < t:
-      leg.Spin()
+      robot.Spin()
    elif symbol == options[1]:
     response = w.inputbox("Row for how many cycles? ", default = "1")
     if response[1] is 0:
@@ -154,7 +151,7 @@ def EditLeg(leg):
      t = time.time() + 2 + spinFor
      leg.Row()
      while time.time() < t:
-      leg.Spin()
+      robot.Spin()
      leg.Stop()
    elif symbol == options[2]:
     pass
@@ -192,8 +189,7 @@ while loop:
   else:
    ChooseLeg()
  
- 
- 
-servos.Relax()
+
+robot.Shutdown()
 
 

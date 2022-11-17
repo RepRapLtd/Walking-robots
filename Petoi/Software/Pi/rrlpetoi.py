@@ -41,6 +41,12 @@ import time
 import math as maths
 from adafruit_servokit import ServoKit
 import smbus
+import VL53L0X
+import board
+import adafruit_mpu6050
+from picamera import PiCamera
+from io import BytesIO
+from PIL import Image
 
 # Number of servos potentially controllable by the PCA9685 PWM controller in the robot
 
@@ -119,9 +125,6 @@ class AToD:
  def __init__(self):
   self.bus = smbus.SMBus(1)   # 512-MB RPi the bus is 1. Otherwise, bus is 0.
 
-# Pro tip: Ensure that ADR0 and ADR1 are grounded. Do not let them
-# open. Otherwise, the i2c address will randomly change.
-
   self.address = 0x4c         # I2C chip address
 #  self.mode = 0x5f            # Register 0x01 mode select - single aquisition
   self.mode = 0x1f            # Register 0x01 mode select - repeated aquisition
@@ -166,7 +169,7 @@ class AToD:
 # Return everything the chip knows as a printable string
 
  def GetAllValues(self):
-  if self.mode is 0x5f:
+  if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
    time.sleep(0.1)
   r0 = self.bus.read_byte_data(self.address, 0x00) # Status
@@ -201,12 +204,124 @@ class AToD:
  def Voltage(self, channel):
   msb = channel*2 + 0x06
   lsb = msb + 1
-  if self.mode is 0x5f:
+  if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
    time.sleep(0.1) # 100 ms is horribly long...
   msb = self.bus.read_byte_data(self.address, msb)
   lsb = self.bus.read_byte_data(self.address, lsb)  
   return self.GetVoltage(msb, lsb)
+  
+#
+# Chip temperature
+#
+  
+ def Temperature(self):
+  if self.mode == 0x5f:
+   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   time.sleep(0.1) # 100 ms is horribly long...
+  r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
+  r5 = self.bus.read_byte_data(self.address, 0x05) # Temp. Int. LSB
+  return self.GetTemperature(r4,r5)
+
+#
+# Chip supply voltage
+#
+
+ def SupplyVoltage(self):
+  if self.mode == 0x5f:
+   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   time.sleep(0.1) # 100 ms is horribly long...
+  re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
+  rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
+  return self.GetVoltage(re,rf) + 2.5     
+  
+ def Shutdown(self):
+  pass
+  
+##########################################################################################
+#
+# Class for the rangefinder
+#
+
+class Range:
+
+ def  __init__(self):
+  self.tof = VL53L0X.VL53L0X(i2c_bus=1,i2c_address=0x29)
+  # I2C Address can change before tof.open()
+  # tof.change_address(0x32)
+  self.tof.open()
+
+  
+ def Distance(self):
+  tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
+
+  #timing = tof.get_timing()
+  #if timing < 20000:
+   #timing = 20000
+  #print("Timing %d ms" % (timing/1000))
+
+  self.distance = tof.get_distance()
+  
+  #if distance > 0:
+  #  print("%d mm, %d cm, %d" % (distance, (distance/10), count))
+
+  #time.sleep(timing/1000000.00)
+
+  self.tof.stop_ranging()
+  #self.tof.close()
+  return self.distance
+  
+ def ShutDown(self):
+  self.tof.stop_ranging()
+  self.tof.close()
+  
+##################################################################################################
+#
+# Class for the accelerometer
+#
+
+class Accelerometer:
+
+ def  __init__(self):
+  self.i2c = board.I2C()
+  self.mpu = adafruit_mpu6050.MPU6050(i2c)
+  
+ def Accelerations(self):
+  return self.mpu.acceleration
+ 
+ def Gyro(self):
+  return self.mpu.gyro
+  
+ def Temperature(self):
+  return self.mpu.temperature
+  
+ def Shutdown(self):
+  pass
+
+####################################################################################################
+#
+# Class for the camera
+#
+
+class Camera:
+
+ def  __init__(self):
+  self.camera = PiCamera()
+  self.camera.start_preview()
+  time.sleep(2)
+  
+ def Snap(self):
+  stream = BytesIO()
+  self.camera.capture(stream, format='jpeg')
+  stream.seek(0)
+  self.image = Image.open(stream)
+  return self.image
+  
+ def SnapToFile(self, name):
+  self.camera.capture(name)
+
+ def Shutdown(self):
+  self.camera.stop_preview()
 
 ##########################################################################################
 #
@@ -329,7 +444,7 @@ class Servos:
 
 # Turn all servos off (used at shutdown).
   
- def Relax(self):
+ def Shutdown(self):
   for servo in range(servoCount):
     self.kit.servo[servo]._pwm_out.duty_cycle = 0
 
@@ -687,15 +802,19 @@ class Leg:
 #
 # Foot hit?
 #
+
  def FootHit(self):
   return self.FootVoltage() < self.footThreshold
+  
+ def Shutdown(self):
+  pass
   
 #####################################################################################################
 #
 # The whole robot
 #
-'''
-class robot:
+
+class Robot:
 
  def __init__(self):
   self.err = ""
@@ -705,18 +824,42 @@ class robot:
   self.aToD = AToD()
   self.err = aToD.err
 
-  self.legs = [Leg(servos, 14, 15, aToD, 0, "front left", "row-points"),\
-   Leg(servos, 9, 8, aToD, 1, "front right", "row-points"),\
-   Leg(servos, 1, 0, aToD, 2, "back left", "row-points"),\
-   Leg(servos, 6, 7, aToD, 3, "back right", "row-points")]
+  self.legs = [Leg(self.servos, 14, 15, self.aToD, 0, "front left", "row-points"),\
+   Leg(self.servos, 9, 8, self.aToD, 1, "front right", "row-points"),\
+   Leg(self.servos, 1, 0, self.aToD, 2, "back left", "row-points"),\
+   Leg(self.servos, 6, 7, self.aToD, 3, "back right", "row-points")]
+  
+  self.range = Range()
+  self.accelerometer = Accelerometer()
+  self.camera = Camera()
    
- def GetLegFromName(name):
-  for leg in legs:
+ def GetLegFromName(self, name):
+  for leg in self.legs:
    if leg.name == name:
     return leg
   self.err = "There's no leg called " + name + ". Returning legs[0]."
   return legs[0]
-'''
+  
+ def Spin(self):
+  for leg in self.legs:
+   leg.Spin()
+   
+ def Stop(self):
+  for leg in self.legs:
+   leg.Stop() 
+   
+ def SupplyVoltage(self):
+  return self.aToD.SupplyVoltage()
+  
+ def Shutdown(self):
+  self.servos.Shutdown()
+  self.aToD.Shutdown()
+  for leg in self.legs:
+   leg.Shutdown()
+  self.range.Shutdown()
+  self.accelerometer.Shutdown()
+  self.camera.Shutdown()
+
 
   
 
