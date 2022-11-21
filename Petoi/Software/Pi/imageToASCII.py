@@ -30,7 +30,7 @@ def getAverageL(image):
     # get average
     return np.average(im.reshape(w*h))
  
-def CovertImageToAscii(image, cols=80, scale=0.43, moreLevels=True):
+def CovertImageToAscii(image, cols=80, scale=0.43, moreLevels=False):
     """
     Given Image and dims (rows, cols) returns an m*n list of Images
     """
@@ -57,7 +57,7 @@ def CovertImageToAscii(image, cols=80, scale=0.43, moreLevels=True):
     #print("cols: %d, rows: %d" % (cols, rows))
     #print("tile dims: %d x %d" % (w, h))
 
-    aimg = []
+    aimg = ""
 
     # check if image size is too small
     if cols > W or rows > H:
@@ -75,8 +75,8 @@ def CovertImageToAscii(image, cols=80, scale=0.43, moreLevels=True):
         if j == rows-1:
             y2 = H
  
-        # append an empty string
-        aimg.append("")
+        # append a newline
+        aimg += "\n"
  
         for i in range(cols):
  
@@ -101,8 +101,8 @@ def CovertImageToAscii(image, cols=80, scale=0.43, moreLevels=True):
                 gsval = gscale2[int((avg*9)/255)]
  
             # append ascii char to string
-            aimg[j] += gsval
-     
+            aimg += gsval
+    aimg += "\n" 
     # return txt image
     return aimg
 

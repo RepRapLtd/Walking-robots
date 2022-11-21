@@ -193,9 +193,9 @@ def DoCamera():
    elif menu[0] == options[1]: 
     response = w.inputbox("Picture file name (must end in .jpg):", default = "snap.jpg")
     if response[1] is 0:
-    response = response[0]
-    robot.camera.SnapToFile(response)
-    w.msgbox("Image saved in " + response)
+     response = response[0]
+     robot.camera.SnapToFile(response)
+     w.msgbox("Image saved in " + response)
    else:
     w.msgbox("Dud option: " + menu[0])
 
