@@ -49,6 +49,7 @@
 from whiptail import Whiptail
 import time
 import rrlpetoi as rrlp
+import imageToASCII as iToA
 
 w = Whiptail(title="RepRap Ltd Quadruped Robot Control Program", backtitle="https://reprapltd.com")
 
@@ -179,11 +180,24 @@ def ChooseLeg():
    EditLeg(GetLegFromName(menu[0]))
    
 def DoCamera():
- response = w.inputbox("Picture file name (must end in .jpg):", default = "snap.jpg")
- if response[1] is 0:
-  response = response[0]
-  robot.camera.SnapToFile(response)
-  w.msgbox("Image saved in " + response)
+ loop = True
+ options = ["Take picture", "Take and save picture"]
+ while loop:
+  menu = w.menu("Camera", options)
+  loop = menu[1] is 0
+  if loop:
+   if menu[0] == options[0]:
+    image = robot.camera.Snap()
+    aImage = iToA.CovertImageToAscii(image)
+    w.msgbox(aImage)
+   elif menu[0] == options[1]: 
+    response = w.inputbox("Picture file name (must end in .jpg):", default = "snap.jpg")
+    if response[1] is 0:
+    response = response[0]
+    robot.camera.SnapToFile(response)
+    w.msgbox("Image saved in " + response)
+   else:
+    w.msgbox("Dud option: " + menu[0])
 
 def DoAccelerometer():
  a = robot.accelerometer.Accelerations()
