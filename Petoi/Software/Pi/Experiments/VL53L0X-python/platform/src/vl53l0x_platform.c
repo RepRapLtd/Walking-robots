@@ -70,7 +70,9 @@ static int i2c_write(VL53L0X_DEV Dev, uint8_t cmd,
             // specified
             if (i2c_write_func(Dev->TCA9548A_Address, (1 << Dev->TCA9548A_Device), NULL, 0) < 0)
             {
+#ifndef QUIET
                 printf("TCA9548A write error\n");
+#endif
                 result = VL53L0X_ERROR_CONTROL_INTERFACE;
             }
         }
@@ -90,7 +92,9 @@ static int i2c_write(VL53L0X_DEV Dev, uint8_t cmd,
     }
     else
     {
+#ifndef QUIET
         printf("i2c bus write not set.\n");
+#endif
         result = VL53L0X_ERROR_CONTROL_INTERFACE;
     }
     
@@ -117,7 +121,9 @@ static int i2c_read(VL53L0X_DEV Dev, uint8_t cmd,
             // specified
             if (i2c_write_func(Dev->TCA9548A_Address, (1 << Dev->TCA9548A_Device), NULL, 0) < 0)
             {
+#ifndef QUIET
                 printf("TCA9548A read error\n");
+#endif
                 result =  VL53L0X_ERROR_CONTROL_INTERFACE;
             }
         }
@@ -137,7 +143,9 @@ static int i2c_read(VL53L0X_DEV Dev, uint8_t cmd,
     }
     else
     {
+#ifndef QUIET
         printf("i2c bus read not set.\n");
+#endif
         result =  VL53L0X_ERROR_CONTROL_INTERFACE;
     }
     
@@ -214,7 +222,9 @@ VL53L0X_Error VL53L0X_RdByte(VL53L0X_DEV Dev, uint8_t index, uint8_t *data)
     uint8_t tmp = 0;
     int ret = i2c_read(Dev, index, &tmp, 1);
     *data = tmp;
+#ifndef QUIET
     // printf("%u\n", tmp);
+#endif
     return ret;
 }
 
@@ -225,7 +235,9 @@ VL53L0X_Error VL53L0X_RdWord(VL53L0X_DEV Dev, uint8_t index, uint16_t *data)
     uint16_t tmp = 0;
     tmp |= buf[1]<<0;
     tmp |= buf[0]<<8;
+#ifndef QUIET
     // printf("%u\n", tmp);
+#endif
     *data = tmp;
     return ret;
 }
@@ -240,7 +252,9 @@ VL53L0X_Error  VL53L0X_RdDWord(VL53L0X_DEV Dev, uint8_t index, uint32_t *data)
     tmp |= buf[1]<<16;
     tmp |= buf[0]<<24;
     *data = tmp;
+#ifndef QUIET
     // printf("%zu\n", tmp);
+#endif
     return ret;
 }
 
