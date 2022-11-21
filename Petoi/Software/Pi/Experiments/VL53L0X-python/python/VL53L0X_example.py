@@ -38,7 +38,7 @@ if timing < 20000:
     timing = 20000
 print("Timing %d ms" % (timing/1000))
 
-for count in range(1, 101):
+for count in range(1, 11):
     distance = tof.get_distance()
     if distance > 0:
         print("%d mm, %d cm, %d" % (distance, (distance/10), count))

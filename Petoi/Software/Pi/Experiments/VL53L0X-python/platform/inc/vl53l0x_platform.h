@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Added by Adrian Bowyer
 // Uncomment to prevent the software sending loads of stuff to standard out.
 
-//#define QUIET
+#define QUIET
 
 #include "vl53l0x_def.h"
 #include "vl53l0x_platform_log.h"
