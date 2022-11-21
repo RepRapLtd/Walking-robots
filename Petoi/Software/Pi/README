@@ -7,6 +7,9 @@ Installation
 $ pip3 install git+https://github.com/pimoroni/VL53L0X-python.git
 $ cd VL53L0X-python
 $ make
+$ cd ~/.local/lib/python3.7/site-packages
+$ mv vl53l0x_python.cpython-37m-arm-linux-gnueabihf.so vl53l0x_python.cpython-37m-arm-linux-gnueabihf.so.old
+$ cp ----/VL53L0X-python/bin/vl53l0x_python.so vl53l0x_python.cpython-37m-arm-linux-gnueabihf.so
 
 
 $ python3 -m pip install git+https://github.com/domdfcoding/whiptail@master --user
