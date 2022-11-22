@@ -856,7 +856,7 @@ class Robot:
   for leg in self.legs:
    leg.Stop()
    
- def RangeScan(self, halfAngle)
+ def RangeScan(self, halfAngle):
   result = []
   a = -halfAngle
   self.servos.SetAngle(self.neck, a)
@@ -866,7 +866,7 @@ class Robot:
    a += 1.0
    self.servos.SetAngle(self.neck, a)
    time.sleep(0.1)
-   result.append(range.Distance())
+   result.append(self.range.Distance())
   self.servos.SetAngle(self.neck, 0.0)
   return result
    
