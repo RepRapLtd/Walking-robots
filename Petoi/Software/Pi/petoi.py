@@ -45,9 +45,9 @@
 # Control program
 #
 
-
-from whiptail import Whiptail
+import sys
 import time
+from whiptail import Whiptail
 import rrlpetoi as rrlp
 import imageToASCII as iToA
 
@@ -204,6 +204,55 @@ def DoAccelerometer():
  g = robot.accelerometer.Gyro()
  t = robot.accelerometer.Temperature()
  w.msgbox("Accelerations: " + str(a) + "\nGyros: " + str(g) + "\nChip temp: " + str(t) + " C")
+ 
+ 
+def ReplaceCharacter(string, index, character):
+ return string[:index-1] + character + string[index:]
+ 
+def RangePicture(ranges, halfAngle):
+ r = ranges[0]
+ x0 = sys.float_info.max
+ x1 = -1
+ y0 = x0
+ y1 = x1
+ a = halfAngle
+ for i in range(len(r)):
+  a -= 1.0
+  ar = a*maths.pi/180.0
+  x = r[i]*maths.cos(ar)
+  y = r[i]*maths.sin(ar)
+  if x < x0:
+   x0 = x
+  if x > x1:
+   x1 = x
+  if y < y0:
+   y0 = y
+  if y > y1:
+   y1 = y
+ rows = 60
+ cols = 80
+ sx = cols/(x1 - x0)
+ sy = rows/(y1 - y0)
+ s = min(sx, sy)
+ pic = ["                                                                                \n"]*rows
+ mn = ranges[1]
+ mx = ranges[2]
+ for i in range(len(r)): 
+  a -= 1.0
+  ar = a*maths.pi/180.0
+  x = round((r[i]*maths.cos(ar) - x0)*s)
+  y = round((r[i]*maths.sin(ar) - y0)*s)
+  c = '.'
+  if i == mn:
+   c = 'v'
+  if i == mx:
+   c = '^'
+  pic[y] = ReplaceCharacter(pic[y], x, c)
+ result = "\n"
+ for p in pic:
+  result += p
+ return result
+
 
 def DoRange():
  loop = True
@@ -220,7 +269,11 @@ def DoRange():
     if response[1] is 0:
      halfAngle = float(response[0])
      ranges = robot.RangeScan(halfAngle)
-     w.msgbox("Ranges (mm)\n" + str(ranges))
+     rp = RangePicture(ranges, halfAngle)
+     r = ranges[0]
+     mn = ranges[1]
+     mx = ranges[2]
+     w.msgbox("Ranges - min: " + str(r[mn]) + "mm, max: " + str(r[mx]) + "mm\n" + rp)
    else:
     w.msgbox("Dud option: " + menu[0])
     

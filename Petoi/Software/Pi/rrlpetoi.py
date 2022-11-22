@@ -37,6 +37,7 @@
 # numbers.
 #
 
+import sys
 import time
 import math as maths
 from adafruit_servokit import ServoKit
@@ -858,6 +859,8 @@ class Robot:
    
  def RangeScan(self, halfAngle):
   result = []
+  min = sys.float_info.max
+  max = -1
   a = -halfAngle
   self.servos.SetAngle(self.neck, a)
   time.sleep(0.5)
@@ -866,9 +869,16 @@ class Robot:
    a += 1.0
    self.servos.SetAngle(self.neck, a)
    time.sleep(0.1)
-   result.append(self.range.Distance())
+   d = self.range.Distance()
+   if d < min:
+    min = d
+    minIndex = s
+   if d > max:
+    max = d
+    maxIndex = s
+   result.append(d)
   self.servos.SetAngle(self.neck, 0.0)
-  return result
+  return [result, minIndex, maxIndex]
    
  def SupplyVoltage(self):
   return self.aToD.SupplyVoltage()
