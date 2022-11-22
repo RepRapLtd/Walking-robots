@@ -839,6 +839,7 @@ class Robot:
   self.range = Range()
   self.accelerometer = Accelerometer()
   self.camera = Camera()
+  self.neck = 12
    
  def GetLegFromName(self, name):
   for leg in self.legs:
@@ -853,7 +854,21 @@ class Robot:
    
  def Stop(self):
   for leg in self.legs:
-   leg.Stop() 
+   leg.Stop()
+   
+ def RangeScan(self, halfAngle)
+  result = []
+  a = -halfAngle
+  self.servos.SetAngle(self.neck, a)
+  time.sleep(0.5)
+  steps = round(2.0*halfAngle)
+  for s in range(steps):
+   a += 1.0
+   self.servos.SetAngle(self.neck, a)
+   time.sleep(0.1)
+   result.append(range.Distance())
+  self.servos.SetAngle(self.neck, 0.0)
+  return result
    
  def SupplyVoltage(self):
   return self.aToD.SupplyVoltage()

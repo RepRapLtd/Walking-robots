@@ -206,9 +206,25 @@ def DoAccelerometer():
  w.msgbox("Accelerations: " + str(a) + "\nGyros: " + str(g) + "\nChip temp: " + str(t) + " C")
 
 def DoRange():
- d = robot.range.Distance()
- w.msgbox("Range is " + str(d) + "mm") 
- 
+ loop = True
+ options = ["Take single reading", "Scan"]
+ while loop:
+  menu = w.menu("LIDAR", options)
+  loop = menu[1] is 0
+  if loop:
+   if menu[0] == options[0]:
+    d = robot.range.Distance()
+    w.msgbox("Range is " + str(d) + "mm") 
+   elif menu[0] == options[1]:
+    response = w.inputbox("Scan half angle:", default = "30")
+    if response[1] is 0:
+     halfAngle = float(response[0])
+     ranges = robot.RangeScan(halfAngle)
+     w.msgbox("Ranges (mm)\n" + str(ranges))
+   else:
+    w.msgbox("Dud option: " + menu[0])
+    
+    
 def DoVoltages():
  w.msgbox(robot.aToD.GetAllValues()) 
 
