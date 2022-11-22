@@ -47,6 +47,7 @@
 
 import sys
 import time
+import math as maths
 from whiptail import Whiptail
 import rrlpetoi as rrlp
 import imageToASCII as iToA
@@ -215,9 +216,9 @@ def RangePicture(ranges, halfAngle):
  x1 = -1
  y0 = x0
  y1 = x1
- a = halfAngle
+ a = -halfAngle
  for i in range(len(r)):
-  a -= 1.0
+  a += 1.0
   ar = a*maths.pi/180.0
   x = r[i]*maths.cos(ar)
   y = r[i]*maths.sin(ar)
@@ -237,8 +238,9 @@ def RangePicture(ranges, halfAngle):
  pic = ["                                                                                \n"]*rows
  mn = ranges[1]
  mx = ranges[2]
+ a = -halfAngle
  for i in range(len(r)): 
-  a -= 1.0
+  a += 1.0
   ar = a*maths.pi/180.0
   x = round((r[i]*maths.cos(ar) - x0)*s)
   y = round((r[i]*maths.sin(ar) - y0)*s)
