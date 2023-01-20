@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js"></script>
+  </head>
+
+  <body>
+    <p id="title">My first Pyodide app</p>
+
+    <script>
+      async function main() {
+        let pyodide = await loadPyodide();
+
+        pyodide.runPython(`print('Hello world, from the browser!')`);
+      };
+
+      main();
+    </script>
+  </body>
+</html>
+

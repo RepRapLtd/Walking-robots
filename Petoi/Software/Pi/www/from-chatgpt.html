@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>To-Do List</title>
+    <style>
+      /* Add some style to the to-do list */
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5em 1em;
+        border-radius: 4px;
+        margin-bottom: 0.5em;
+        background-color: #f2f2f2;
+      }
+      button {
+        border: none;
+        background-color: transparent;
+        font-size: 1em;
+        cursor: pointer;
+      }
+      input[type="text"] {
+        flex: 1;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5em;
+        font-size: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Add a form to allow users to add new items to the list -->
+    <form id="add-form">
+      <input type="text" placeholder="Add a new item" id="item-input">
+      <button type="submit">Add</button>
+    </form>
+    <!-- Add a container to hold the list of items -->
+    <ul id="item-list"></ul>
+    <script>
+      // Get a reference to the form and list elements
+      const addForm = document.getElementById('add-form');
+      const itemList = document.getElementById('item-list');
+
+      // Add an event listener to the form to handle submit events
+      addForm.addEventListener('submit', (event) => {
+        // Prevent the form from submitting
+        event.preventDefault();
+
+        // Get the value of the item input field
+        const itemInput = document.getElementById('item-input');
+        const itemValue = itemInput.value;
+
+        // Create a new list item element
+        const newItem = document.createElement('li');
+
+        // Set the list item's content to the value of the input field
+        newItem.innerHTML = itemValue;
+
+        // Add a delete button to the list item
+        const deleteButton = document.createElement('button');
+        deleteButton.innerHTML = 'Delete';
+        newItem.appendChild(deleteButton);
+
+        // Add the new list item to the list
+        itemList.appendChild(newItem);
+
+        // Clear the value of the input field
+        itemInput.value = '';
+      });
+
+      // Add an event listener to the list to handle click events on delete buttons
+      itemList.addEventListener('click', (event) => {
+        // Check if the element clicked was a delete button
+        if (event.target.tagName === 'BUTTON') {
+          // If it was, remove the parent list item from the list
+          event.target.parentElement.remove();
+        }
+      });
+    </script>
+  </body>
+</html>
+
