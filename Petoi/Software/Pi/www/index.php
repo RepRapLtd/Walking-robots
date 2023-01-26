@@ -12,10 +12,8 @@
 </HEAD>
 
 <BODY>
+<?php include('header.php'); ?>
 
-<H1>RepRap Ltd Quadruped Robot</H1>
-
-<HR>
 
 <table>
   <tr align="left"><th><a href="servos.php">Servos</a></th></tr>

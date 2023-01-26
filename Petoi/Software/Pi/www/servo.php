@@ -10,11 +10,12 @@
 
 <BODY>
 
-<H1>RepRap Ltd Quadruped Robot</H1>
+<?php include('header.php'); ?>
 
-<HR>
-
-<h2>Servo N</h2>
+<h2> <?php 
+$servo=$_GET["s"];
+echo 'Servo ' . htmlspecialchars($servo) ;?>
+</h2>
 
 Angle: 0<sup>o</sup>
 

@@ -10,11 +10,7 @@
 
 <BODY>
 
-<H1>RepRap Ltd Quadruped Robot</H1>
-
-
-
-<HR>
+<?php include('header.php'); ?>
 
 <H2>Servos</H2>
 
