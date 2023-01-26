@@ -28,8 +28,6 @@
   <tr align="left"><th><a href="servo.php?s=15">Servo 15</a></th></tr> 
 </table>
 
-<a href="index.php">Home</a>
-
 </BODY>
 
 </HTML>

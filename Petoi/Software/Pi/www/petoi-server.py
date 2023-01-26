@@ -53,6 +53,8 @@ import rrlpetoi as rrlp
 import socketserver
 #from tendo import singleton
 
+encoding = "utf-8"
+
 
 robot = rrlp.Robot()
 
@@ -67,27 +69,41 @@ legs = robot.legs
 
 print("Robot initialised")
 
-def EditServo(servo, option, angle=""):
+def ChangeServo(servo, option, angle):
  reply = ""
- options = ["+1", "-1", "+10", "-10", "set angle", "negate direction", "save current angle as offset"]
- if option == options[0]:
+ if option == "+1":
   servos.SetAngle(servo, servos.angle[servo] + 1)
- elif option == options[1]:
+ elif option == "-1":
   servos.SetAngle(servo, servos.angle[servo] - 1)
- elif option == options[2]:
+ elif option == "+10":
   servos.SetAngle(servo, servos.angle[servo] + 10)
- elif option == options[3]:
+ elif option == "-10":
   servos.SetAngle(servo, servos.angle[servo] - 10)
- elif option == options[4]:
+ elif option == "zero":
+  servos.SetAngle(servo, 0)
+ elif option == "set angle":
   if angle != "":
    a = float(angle)
    servos.SetAngle(servo, a)
- elif option == options[5]:
+ elif option == "negate direction":
   servos.InvertDirection(servo)
- elif option == options[6]:
+ elif option == "save current angle as offset":
   servos.MakeCurrentPositionZero(servo)
  else:
   reply = "EditServo - dud option: " + option
+ return reply
+ 
+def Interpret(command):
+ tokens = command.split()
+ reply = ""
+ if tokens[0] == "ChangeServo":
+  angle = ""
+  if len(tokens) >= 4:
+   angle = int(tokens[3])
+  reply = ChangeServo(int(tokens[1]), tokens[2], angle)
+ elif tokens[0] == "Boo":
+  pass
+ 
  return reply
 
 
@@ -102,8 +118,8 @@ class TCPHandler(socketserver.StreamRequestHandler):
   print(self.data)
   # Likewise, self.wfile is a file-like object used to write back
   # to the client
-  reply = EditServo(0, "+10")
-  self.wfile.write(bytes(reply + "\n", 'utf-8'))
+  reply = Interpret(self.data.decode(encoding))
+  self.wfile.write(bytes(reply + "\n", encoding))
 
 if __name__ == "__main__":
 
