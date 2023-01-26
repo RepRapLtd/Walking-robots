@@ -85,7 +85,7 @@ def EditServo(servo, option, angle=""):
  elif option == options[6]:
   servos.MakeCurrentPositionZero(servo)
  else:
-  reply = "EditServo - dud option: " + option)
+  reply = "EditServo - dud option: " + option
  return reply
 
 
@@ -113,4 +113,5 @@ if __name__ == "__main__":
  with socketserver.TCPServer((HOST, PORT), TCPHandler) as server:
   # Activate the server; this will keep running until you
   # interrupt the program with Ctrl-C
+  print("Starting server.")
   server.serve_forever()
