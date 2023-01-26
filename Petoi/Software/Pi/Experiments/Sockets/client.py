@@ -1,13 +1,8 @@
 import socket
 import sys
 
-#exec(open('server.py').read())
-
-s = "Hello from voltages.py"
-
 HOST, PORT = "localhost", 9999
-#data = " ".join(sys.argv[1:])
-data = s
+data = " ".join(sys.argv[1:])
 
 # Create a socket (SOCK_STREAM means a TCP socket)
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -19,11 +14,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     received = str(sock.recv(1024), "utf-8")
 
 print("Sent:     {}".format(data))
-print(format(received))
-
-
-
-
-#print(s)
-
-
+print("Received: {}".format(received))

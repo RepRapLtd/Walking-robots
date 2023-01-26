@@ -65,6 +65,8 @@ if aToD.err != "":
 
 legs = robot.legs
 
+print("Robot initialised")
+
 def EditServo(servo, option, angle=""):
  reply = ""
  options = ["+1", "-1", "+10", "-10", "set angle", "negate direction", "save current angle as offset"]
@@ -101,7 +103,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
   # Likewise, self.wfile is a file-like object used to write back
   # to the client
   reply = EditServo(0, "+10")
-  self.wfile.write(reply + "\n")
+  self.wfile.write(bytes(reply + "\n", 'utf-8'))
 
 if __name__ == "__main__":
 
