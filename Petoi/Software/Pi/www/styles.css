@@ -1,5 +1,58 @@
+
+
+
+
 table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
+  table-layout: auto;
+  width: 300px;
+  text-align: center;
+  font-size: 16px;
+  
 }
 
+a:link {
+  color: #008000;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #006b00;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #029602;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+a:active {
+  color: yellow;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+
+body  {background-color: #eaeaea;}
+
+body {
+    font: normal 10px Verdana, Arial, sans-serif;
+}
+body {
+  color: #483737;
+}
+h1 {
+  font-size: 35px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+body {
+  font-size: 16px;
+}
