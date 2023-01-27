@@ -3,7 +3,7 @@ import sys
 
 #exec(open('server.py').read())
 
-s = "Hello from voltages.py"
+s = "ChangeServo 0 +10"
 
 HOST, PORT = "localhost", 9999
 #data = " ".join(sys.argv[1:])
