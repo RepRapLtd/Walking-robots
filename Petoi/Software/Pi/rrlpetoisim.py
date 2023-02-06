@@ -1,5 +1,5 @@
 #
-# Petoi Bittle Library For a Raspberry Pi
+# Petoi Bittle Library For a Raspberry Pi - Robot Simulator
 #
 # Written by
 #
@@ -12,6 +12,8 @@
 #
 # Licence: GPL
 #
+# This library pretends to be a robot for testing on systems other than the Raspberry Pi zero
+# in the robot (though it would also work on that too without interfacing with the robot controls).
 #
 # Joint servo numbers and foot sensors (top view)
 #
@@ -40,14 +42,15 @@
 import sys
 import time
 import math as maths
-from adafruit_servokit import ServoKit
-import smbus
-import VL53L0X
-import board
-import adafruit_mpu6050
-from picamera import PiCamera
-from io import BytesIO
-from PIL import Image
+#from adafruit_servokit import ServoKit
+#import smbus
+#import VL53L0X
+#import board
+#import adafruit_mpu6050
+#from picamera import PiCamera
+#from io import BytesIO
+#from PIL import Image
+import shutil
 
 # Number of servos potentially controllable by the PCA9685 PWM controller in the robot
 
@@ -124,21 +127,22 @@ def ToRadians(a):
 class AToD:
  
  def __init__(self):
-  self.bus = smbus.SMBus(1)   # 512-MB RPi the bus is 1. Otherwise, bus is 0.
+  # self.bus = smbus.SMBus(1)   # 512-MB RPi the bus is 1. Otherwise, bus is 0.
 
   self.address = 0x4c         # I2C chip address
 #  self.mode = 0x5f            # Register 0x01 mode select - single aquisition
   self.mode = 0x1f            # Register 0x01 mode select - repeated aquisition
-  self.err = ""
 
-  try:
+
+  '''try:
    if self.bus.read_byte_data(self.address, 0x01) != self.mode: # If current IC mode != program mode
     self.bus.write_byte_data(self.address, 0x01, self.mode)    # Initializes the IC and set mode
     self.bus.write_byte_data(self.address, 0x02, 0x00)    # Trigger a initial data collection
     time.sleep(1)				# Wait a sec, just for init
   except (IOError, self.err):
    pass
-
+  '''
+  self.err = ""
    
 # Check for a specific bit value
    
@@ -170,23 +174,24 @@ class AToD:
 # Return everything the chip knows as a printable string
 
  def GetAllValues(self):
-  if self.mode == 0x5f:
+  '''if self.mode == 0x5f:
    self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
    time.sleep(0.1) # 100 ms is horribly long...
-  r0 = self.bus.read_byte_data(self.address, 0x00) # Status
-  r1 = self.bus.read_byte_data(self.address, 0x01) # Control - mode select
-  r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
-  r5 = self.bus.read_byte_data(self.address, 0x05) # Temp. Int. LSB
-  r6 = self.bus.read_byte_data(self.address, 0x06) # V0 MSB
-  r7 = self.bus.read_byte_data(self.address, 0x07) # V0 LSB
-  r8 = self.bus.read_byte_data(self.address, 0x08) # V1 MSB
-  r9 = self.bus.read_byte_data(self.address, 0x09) # V1 LSB
-  ra = self.bus.read_byte_data(self.address, 0x0a) # V2 MSB
-  rb = self.bus.read_byte_data(self.address, 0x0b) # V2 LSB
-  rc = self.bus.read_byte_data(self.address, 0x0c) # V3 MSB
-  rd = self.bus.read_byte_data(self.address, 0x0d) # V3 LSB
-  re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
-  rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
+  '''
+  r0 = 0x00 # Status
+  r1 = 0x01 # Control - mode select
+  r4 = 0x04 # Temp. Int. MSB
+  r5 = 0x05 # Temp. Int. LSB
+  r6 = 0x06 # V0 MSB
+  r7 = 0x07 # V0 LSB
+  r8 = 0x08 # V1 MSB
+  r9 = 0x09 # V1 LSB
+  ra = 0x0a # V2 MSB
+  rb = 0x0b # V2 LSB
+  rc = 0x0c # V3 MSB
+  rd = 0x0d # V3 LSB
+  re = 0x0e # Vcc MSB
+  rf = 0x0f # Vcc LSB
   result = "Status register: " + hex(r0) + "\n"
   result += "Control register: " + hex(r1) + "\n"
   result += "Chip temp. : " + str(self.GetTemperature(r4,r5)) + "C\n"
@@ -206,10 +211,10 @@ class AToD:
   msb = channel*2 + 0x06
   lsb = msb + 1
   if self.mode == 0x5f:
-   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   #self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
    time.sleep(0.1)
-  msb = self.bus.read_byte_data(self.address, msb)
-  lsb = self.bus.read_byte_data(self.address, lsb)  
+  msb = 0x02
+  lsb = 0x01  
   return self.GetVoltage(msb, lsb)
   
 #
@@ -218,10 +223,10 @@ class AToD:
   
  def Temperature(self):
   if self.mode == 0x5f:
-   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   #self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
    time.sleep(0.1)
-  r4 = self.bus.read_byte_data(self.address, 0x04) # Temp. Int. MSB
-  r5 = self.bus.read_byte_data(self.address, 0x05) # Temp. Int. LSB
+  r4 = 0x04 # Temp. Int. MSB
+  r5 = 0x05 # Temp. Int. LSB
   return self.GetTemperature(r4,r5)
 
 #
@@ -230,10 +235,10 @@ class AToD:
 
  def SupplyVoltage(self):
   if self.mode == 0x5f:
-   self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
+   #self.bus.write_byte_data(self.address, 0x02, 0x00) # Trigger a data collection
    time.sleep(0.1)
-  re = self.bus.read_byte_data(self.address, 0x0e) # Vcc MSB
-  rf = self.bus.read_byte_data(self.address, 0x0f) # Vcc LSB
+  re = 0x0e # Vcc MSB
+  rf = 0x0f # Vcc LSB
   return self.GetVoltage(re,rf) + 2.5     
   
  def Shutdown(self):
@@ -247,30 +252,31 @@ class AToD:
 class Range:
 
  def  __init__(self):
-  self.tof = VL53L0X.VL53L0X(i2c_bus=1,i2c_address=0x29)
+  #self.tof = VL53L0X.VL53L0X(i2c_bus=1,i2c_address=0x29)
   # I2C Address can change before tof.open()
   # tof.change_address(0x32)
   #self.tof.open()
+  pass
 
   
  def Distance(self):
-  self.tof.open()
-  self.tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
+  #self.tof.open()
+  #self.tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
 
   #timing = tof.get_timing()
   #if timing < 20000:
    #timing = 20000
   #print("Timing %d ms" % (timing/1000))
 
-  self.distance = self.tof.get_distance()
+  self.distance = 123
   
   #if distance > 0:
   #  print("%d mm, %d cm, %d" % (distance, (distance/10), count))
 
   #time.sleep(timing/1000000.00)
 
-  self.tof.stop_ranging()
-  self.tof.close()
+  #self.tof.stop_ranging()
+  #self.tof.close()
   return self.distance
   
  def Shutdown(self):
@@ -286,17 +292,18 @@ class Range:
 class Accelerometer:
 
  def  __init__(self):
-  self.i2c = board.I2C()
-  self.mpu = adafruit_mpu6050.MPU6050(self.i2c)
+  #self.i2c = board.I2C()
+  #self.mpu = adafruit_mpu6050.MPU6050(self.i2c)
+  pass
   
  def Accelerations(self):
-  return self.mpu.acceleration
+  return [1, 2, 3]
  
  def Gyro(self):
-  return self.mpu.gyro
+  return [4, 5, 6]
   
  def Temperature(self):
-  return self.mpu.temperature
+  return 0
   
  def Shutdown(self):
   pass
@@ -309,22 +316,25 @@ class Accelerometer:
 class Camera:
 
  def  __init__(self):
-  self.camera = PiCamera()
-  self.camera.start_preview()
+  #self.camera = PiCamera()
+  #self.camera.start_preview()
   time.sleep(2)
   
  def Snap(self):
-  stream = BytesIO()
-  self.camera.capture(stream, format='jpeg')
-  stream.seek(0)
-  self.image = Image.open(stream)
+  #stream = BytesIO()
+  #self.camera.capture(stream, format='jpeg')
+  #stream.seek(0)
+  self.image = Image.open("testpic.jpg")
   return self.image
   
  def SnapToFile(self, name):
-  self.camera.capture(name)
+  #self.camera.capture(name)
+  shutil.copyfile("testpic.jpg", "newpic.jpg")
+  pass
 
  def Shutdown(self):
-  self.camera.stop_preview()
+  #self.camera.stop_preview()
+  pass
 
 ##########################################################################################
 #
@@ -344,14 +354,14 @@ class Camera:
 class Servos:
 
  def __init__(self):
-  self.kit = ServoKit(channels=servoCount)
+  #self.kit = ServoKit(channels=servoCount)
   self.angle = [0]*servoCount
   self.angleOffsets = [0]*servoCount
   self.direction = [1.0]*servoCount
   self.backedUp = False
   self.activeServos = []
-  for servo in range(servoCount):
-   self.kit.servo[servo].actuation_range = 270
+  #for servo in range(servoCount):
+   #self.kit.servo[servo].actuation_range = 270
 
 #
 # Get the offsets and directions from a file.
@@ -408,9 +418,11 @@ class Servos:
    self.angle[servo] = 0.0
    if self.angleOffsets[servo] < 0.0:
     # No servo at this location - disable the PWM
-    self.kit.servo[servo]._pwm_out.duty_cycle = 0
+    #self.kit.servo[servo]._pwm_out.duty_cycle = 0
+    pass
    else:
-    self.kit.servo[servo].angle = self.angleOffsets[servo]
+    #self.kit.servo[servo].angle = self.angleOffsets[servo]
+    pass
   
 
 #
@@ -419,7 +431,7 @@ class Servos:
 
  def SetAngle(self, servo, a):
     a1 = self.direction[servo]*a + self.angleOffsets[servo]
-    self.kit.servo[servo].angle = a1
+    #self.kit.servo[servo].angle = a1
     self.angle[servo] = a
 
 #
@@ -451,7 +463,8 @@ class Servos:
   
  def Shutdown(self):
   for servo in range(servoCount):
-    self.kit.servo[servo]._pwm_out.duty_cycle = 0
+    #self.kit.servo[servo]._pwm_out.duty_cycle = 0
+    pass
 
 #
 #############################################################################################
@@ -602,8 +615,8 @@ class Leg:
 #
 #  [(a1, a2), (a3, a4)]
 #
-# If self.err is not "" then the position is not attainable. The first and second
-# are pairs of angles for the shoulder and forearm servos. There are always two solutions or none.
+# If self.err is not "" then the position is not atainable. The first and second
+# are pairs of angles for the shoulder and forearm servos. There are always two solutions of none.
 # The robot uses the second returned solution, which is the one where the knee points backwards.
 #
 # If the position can't be attained self.err is set to an error message.
@@ -638,6 +651,8 @@ class Leg:
 
 #
 # Go fast to a point in robot coordinates, checking for foot hit at the end if required.
+# A point structure is [(x, y), v, footCheck]. Coordinates are in mm, velocity (ignored) is in mm/s
+# and footCheck is a boolean which, if true, checks the foot sensor at the end of the movement.
 #
 
  def QuickToPoint(self, point):

@@ -48,61 +48,147 @@
 import sys
 import time
 import math as maths
-import rrlpetoi as rrlp
-
 import socketserver
+
+if len(sys.argv) == 1:
+ import rrlpetoi as rrlp
+elif sys.argv[1] == "s":
+ import rrlpetoisim as rrlp
+else:
+ print("Invalid argument: " + sys.argv[1])
+ sys.exit(1)
+
+
 #from tendo import singleton
 
 encoding = "utf-8"
 
-
 robot = rrlp.Robot()
-
-servos = robot.servos
-activeServos = servos.activeServos
-
-aToD = robot.aToD
-if aToD.err != "":
- print("A to D initialisation error: " + aToD.err)
-
-legs = robot.legs
 
 print("Robot initialised")
 
-def ChangeServo(servo, option, angle):
+
+def GetLegNames():
  reply = ""
+ for leg in robot.legs:
+  reply += leg.name + " "
+ return reply
+
+
+def GetLegDescription(legName):
+ leg = robot.GetLegFromName(legName)
+ v = leg.FootVoltage()
+ hit = leg.FootHit()
+ reply = "Leg " + legName + " is at (x, y) = " + str(leg.point[0]) + ". Its foot is "
+ if hit:
+  reply += "touching"
+ else:
+  reply += "not touching"
+ reply += " (foot voltage = " + str(v) + ")."
+ return reply
+ 
+ 
+def GetServoAngle(servoNumber):
+ servo = int(servoNumber)
+ return str(robot.servos.angle[servo])
+ 
+def GetVoltages():
+ return robot.aToD.GetAllValues()
+ 
+def GetActiveServos():
+ reply = ""
+ for servo in robot.servos.activeServos:
+  reply += str(servo) + " "
+ return reply
+ 
+
+
+# ChangeServo servo option [angle]
+
+def ChangeServo(tokens):
+ reply = ""
+ servo = int(tokens[1])
+ option = tokens[2]
  if option == "+1":
-  servos.SetAngle(servo, servos.angle[servo] + 1)
+  robot.servos.SetAngle(servo, robot.servos.angle[servo] + 1)
  elif option == "-1":
-  servos.SetAngle(servo, servos.angle[servo] - 1)
+  robot.servos.SetAngle(servo, robot.servos.angle[servo] - 1)
  elif option == "+10":
-  servos.SetAngle(servo, servos.angle[servo] + 10)
+  robot.servos.SetAngle(servo, robot.servos.angle[servo] + 10)
  elif option == "-10":
-  servos.SetAngle(servo, servos.angle[servo] - 10)
+  robot.servos.SetAngle(servo, robot.servos.angle[servo] - 10)
  elif option == "zero":
-  servos.SetAngle(servo, 0)
- elif option == "set angle":
-  if angle != "":
-   a = float(angle)
-   servos.SetAngle(servo, a)
- elif option == "negate direction":
-  servos.InvertDirection(servo)
- elif option == "save current angle as offset":
-  servos.MakeCurrentPositionZero(servo)
+  robot.servos.SetAngle(servo, 0)
+ elif option == "setAngle":
+  angle = float(tokens[3])
+  robot.servos.SetAngle(servo, a)
+ elif option == "negateDirection":
+  robot.servos.InvertDirection(servo)
+ elif option == "saveCurrentAngleAsOffset":
+  robot.servos.MakeCurrentPositionZero(servo)
  else:
   reply = "EditServo - dud option: " + option
  return reply
+ 
+
+# MoveLegFast name x y
+
+def MoveLegFast(tokens):
+ reply = ""
+ leg = robot.GetLegFromName(tokens[1])
+ x = float(tokens[2])
+ y = float(tokens[3])
+ point = [(x, y), 1, True]
+ leg.QuickToPoint(point)
+ return reply
+ 
+# MoveLegStraight name x y v
+
+def MoveLegStraight(tokens):
+ reply = ""
+ leg = robot.GetLegFromName(tokens[1])
+ x = float(tokens[2])
+ y = float(tokens[3])
+ v = float(tokens[4])
+ point = [(x, y), v, True]
+ t = leg.StraightToPoint(point) + 1
+ robot.SpinForTime(t)
+ return reply
+ 
+
  
 def Interpret(command):
  tokens = command.split()
  reply = ""
  if tokens[0] == "ChangeServo":
-  angle = ""
-  if len(tokens) >= 4:
-   angle = int(tokens[3])
-  reply = ChangeServo(int(tokens[1]), tokens[2], angle)
- elif tokens[0] == "Boo":
-  pass
+  # ChangeServo servo option [angle]
+  reply = ChangeServo(tokens)
+ elif tokens[0] == "GetLegDescription":
+  # GetLegDescription name
+  reply = GetLegDescription(tokens[1])
+ elif tokens[0] == "GetLegNames":
+  # GetLegNames
+  reply = GetLegNames()
+ elif tokens[0] == "GetServoAngle":
+  # GetServoAngle servo
+  reply = GetServoAngle(tokens[1])
+ elif tokens[0] == "GetVoltages":
+  # GetVoltages
+  reply = GetVoltages() 
+ elif tokens[0] == "GetActiveServos":
+  # GetActiveServos
+  reply = GetActiveServos()  
+ elif tokens[0] == "MoveLegFast":
+  # MoveLegFast name x y
+  reply = MoveLegFast(tokens) 
+ elif tokens[0] == "MoveLegStraight":
+  # MoveLegStraight name x y v
+  reply = MoveLegStraight(tokens)
+ elif tokens[0] == "Exit":
+  robot.Shutdown()
+  sys.exit(0)
+ else:
+  print("Dud command: " + command)
  
  return reply
 
@@ -130,6 +216,6 @@ if __name__ == "__main__":
  # Create the server, binding to localhost on port 9999
  with socketserver.TCPServer((HOST, PORT), TCPHandler) as server:
   # Activate the server; this will keep running until you
-  # interrupt the program with Ctrl-C
+  # interrupt the program with Ctrl-C or send "Exit"
   print("Starting server.")
   server.serve_forever()

@@ -17,7 +17,11 @@ $servo=$_GET["s"];
 echo 'Servo ' . htmlspecialchars($servo) ;?>
 </h2>
 
-Angle: 0<sup>o</sup>
+Angle: <?php 
+ $output = shell_exec('python3 send-command-get-reply.py GetServoAngle '.$servo );
+
+ echo $output; 
+?>     <sup>o</sup>
 <br>
 <br>
 <form id="myForm">
