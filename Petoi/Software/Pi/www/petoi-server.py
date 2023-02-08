@@ -45,6 +45,11 @@
 #
 ############################################################################################
 
+
+debug = True
+
+
+
 import sys
 import time
 import math as maths
@@ -64,8 +69,11 @@ else:
 encoding = "utf-8"
 
 robot = rrlp.Robot()
+lastServo = robot.servos.activeServos[0]
+lastLeg = robot.legs[0]
+if debug:
+ print("Robot initialised")
 
-print("Robot initialised")
 
 
 def GetLegNames():
@@ -77,6 +85,7 @@ def GetLegNames():
 
 def GetLegDescription(legName):
  leg = robot.GetLegFromName(legName)
+ lastLeg = leg
  v = leg.FootVoltage()
  hit = leg.FootHit()
  reply = "Leg " + legName + " is at (x, y) = " + str(leg.point[0]) + ". Its foot is "
@@ -90,6 +99,7 @@ def GetLegDescription(legName):
  
 def GetServoAngle(servoNumber):
  servo = int(servoNumber)
+ lastServo = servo
  return str(robot.servos.angle[servo])
  
 def GetVoltages():
@@ -101,13 +111,18 @@ def GetActiveServos():
   reply += str(servo) + " "
  return reply
  
+def GetLastServo():
+ return str(lastServo)
+ 
+def GetLastLeg():
+ return lastLeg.name 
 
 
 # ChangeServo servo option [angle]
 
 def ChangeServo(tokens):
- reply = ""
  servo = int(tokens[1])
+ lastServo = servo
  option = tokens[2]
  if option == "+1":
   robot.servos.SetAngle(servo, robot.servos.angle[servo] + 1)
@@ -128,6 +143,8 @@ def ChangeServo(tokens):
   robot.servos.MakeCurrentPositionZero(servo)
  else:
   reply = "EditServo - dud option: " + option
+  return reply
+ reply = str(robot.servos.angle[servo])
  return reply
  
 
@@ -177,7 +194,13 @@ def Interpret(command):
   reply = GetVoltages() 
  elif tokens[0] == "GetActiveServos":
   # GetActiveServos
-  reply = GetActiveServos()  
+  reply = GetActiveServos()
+ elif tokens[0] == "GetLastServo":
+  # GetLastServo
+  reply = GetLastServo()
+ elif tokens[0] == "GetLastLeg":
+  # GetLastLeg
+  reply = GetLastLeg()   
  elif tokens[0] == "MoveLegFast":
   # MoveLegFast name x y
   reply = MoveLegFast(tokens) 
@@ -200,11 +223,15 @@ class TCPHandler(socketserver.StreamRequestHandler):
   # self.rfile is a file-like object created by the handler;
   # we can now use e.g. readline() instead of raw recv() calls
   self.data = self.rfile.readline().strip()
-  print("{} wrote:".format(self.client_address[0]))
-  print(self.data)
+  received = self.data.decode(encoding)
+ # print("{} wrote:".format(self.client_address[0]))
+  if debug:  
+   print("received: "+received)
   # Likewise, self.wfile is a file-like object used to write back
   # to the client
-  reply = Interpret(self.data.decode(encoding))
+  reply = Interpret(received)
+  if debug:  
+   print("sent: "+reply)
   self.wfile.write(bytes(reply + "\n", encoding))
 
 if __name__ == "__main__":
@@ -217,5 +244,6 @@ if __name__ == "__main__":
  with socketserver.TCPServer((HOST, PORT), TCPHandler) as server:
   # Activate the server; this will keep running until you
   # interrupt the program with Ctrl-C or send "Exit"
-  print("Starting server.")
+  if debug:  
+   print("Starting server.")
   server.serve_forever()

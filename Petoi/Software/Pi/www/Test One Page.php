@@ -15,22 +15,36 @@
 <?php include('header.php'); ?>
 
 <H2>Servos</H2>
-<table>
-  <tr align="left"><th>Zero servos</th><th>blah blah blah</th></tr>
-  <tr align="left"><th>Save current position as zeros</th><th>blah blah blah</th></tr>
-  <tr align="left"><th><a href="servo.php?s=0">Servo 0</a></th><th rowspan="9">blah blah blah</th></tr>
-  <tr align="left"><th><a href="servo.php?s=1">Servo 1</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=6">Servo 6</a></th></tr> 
-  <tr align="left"><th><a href="servo.php?s=7">Servo 7</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=8">Servo 8</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=9">Servo 9</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=12">Servo 12</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=14">Servo 14</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=15">Servo 15</a></th></tr> 
- 
-</table>
 
-<a
+<button type="submit" value="Home" > Zero Servos </button> <button type="submit" value="Home" > Save current position as zeros </button> <!-- Need to set what the buttons do as currently same as "Home" Button below -->
+<br>
+<br>
+
+
+<table>
+  
+  <tr align="left"><th><a href="servo.php?s=0">Servo 0</a> 
+  <p>Select Servo</p>
+<input type="radio" id="0" name="Servo" value="0"checked="checked"> 
+<label for="0">0</label> <br>
+<input type="radio" id="1" name="Servo" value="1">
+<label for="1">1</label><br>
+<input type="radio" id="6" name="Servo" value="6">
+<label for="6">6</label><br>
+<input type="radio" id="7" name="Servo" value="7">
+<label for="7">7</label><br>  
+<input type="radio" id="8" name="Servo" value="8">
+<label for="8">8</label><br>
+<input type="radio" id="9" name="Servo" value="9">
+<label for="9">9</label><br>
+<input type="radio" id="12" name="Servo" value="12">
+<label for="12">12</label><br>
+<input type="radio" id="14" name="Servo" value="14">
+<label for="14">14</label><br>
+<input type="radio" id="15" name="Servo" value="15">
+<label for="15">15</label><br>
+
+  </th><th rowspan="9">
 
 <h2> <?php 
 $servo=$_GET["s"];
@@ -63,7 +77,19 @@ Angle: <?php
 <br>
 <button type="submit" value="-negate" > Negate Direction </button>
 
-</form>
+</form></th></tr>
+  <tr align="left"><th><a href="servo.php?s=1">Servo 1</a></th></tr>
+  <tr align="left"><th><a href="servo.php?s=6">Servo 6</a></th></tr> 
+  <tr align="left"><th><a href="servo.php?s=7">Servo 7</a></th></tr>
+  <tr align="left"><th><a href="servo.php?s=8">Servo 8</a></th></tr>
+  <tr align="left"><th><a href="servo.php?s=9">Servo 9</a></th></tr>
+  <tr align="left"><th><a href="servo.php?s=12">Servo 12</a></th></tr>
+  <tr align="left"><th><a href="servo.php?s=14">Servo 14</a></th></tr>
+  <tr align="left"><th><a href="servo.php?s=15">Servo 15</a></th></tr> 
+ 
+</table>
+
+
 
 
 <script>
