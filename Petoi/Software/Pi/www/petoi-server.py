@@ -124,19 +124,19 @@ def ChangeServo(tokens):
  servo = int(tokens[1])
  lastServo = servo
  option = tokens[2]
- if option == "+1":
+ if option == "p1":
   robot.servos.SetAngle(servo, robot.servos.angle[servo] + 1)
- elif option == "-1":
+ elif option == "m1":
   robot.servos.SetAngle(servo, robot.servos.angle[servo] - 1)
- elif option == "+10":
+ elif option == "p10":
   robot.servos.SetAngle(servo, robot.servos.angle[servo] + 10)
- elif option == "-10":
+ elif option == "m10":
   robot.servos.SetAngle(servo, robot.servos.angle[servo] - 10)
  elif option == "zero":
   robot.servos.SetAngle(servo, 0)
  elif option == "setAngle":
   angle = float(tokens[3])
-  robot.servos.SetAngle(servo, a)
+  robot.servos.SetAngle(servo, angle)
  elif option == "negateDirection":
   robot.servos.InvertDirection(servo)
  elif option == "saveCurrentAngleAsOffset":

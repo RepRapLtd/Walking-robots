@@ -1,109 +1,54 @@
-
-<html>
-   <head>
-      <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-      <script type="text/javascript">
-      $call = 'pyechoarg.php';
-     $(document).ready(function() {
-        $('#plus_1').click(function() {
-           //alert("success1");
-           $.get($call, function(data) {
-               $('#servo_a').empty().append(data);
-               //alert("success2" + data);
-           });
-        });
-    });
-      </script>
-   </head>
-   <body>
-      <button id="plus_1">+1</button>
-      <br>
-         Servo angle: <span id="servo_a">Some random test</span>
-   </body>
-</html>
-
-
-
-
-
-<!--
-<!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="content-type" content="text/html;charset=UTF-8">
-    <title>Python-jQuery Example</title>
-    <script src="http://code.jquery.com/jquery-2.0.3.js"></script>
-    <script>
-        $(function()
-        {
-            //$command = "pyechoarg.py abc"
-            $.ajax({
-                url: "pyechoarg.py abc",
-                type: "post",
-                datatype: "html",
-                data: "here is data",
-                success: function(response)
-                {
-                	alert(response);
-                        $("#div").html(response);
-                        console.log("There is a response"); 
-                }
-            });
-        });
+      
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 
-    </script>
-</head>
-<body>
-    <div id="div">Default Stuff</div>
-</body>
-</html>
-
-
-<!DOCTYPE html>
-<html>
-<script src="http://code.jquery.com/jquery-2.0.3.js"></script>
-<body>
- 
-<h2>AJAX Hello World</h2>
- 
-<p id="demo">Update content using ajax.</p>
- 
-<button type="button" onclick="loadDocument()">Update Content</button>
- 
 <script>
-function loadDocument() 
+  
+function p1()
 {
-alert("hello!");
-
-            $.ajax({
-                url: "pyechoarg.py abc",
-                type: "post",
-                datatype: "html",
-                data: "here is data",
-                success: function(response)
-                {
-                	alert(response);
-                        document.getElementById("demo").innerHTML = response;
-                        console.log("There is a response"); 
-                }
-            });
-
-  /*var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() 
+  $call = 'send-command-get-reply.php?args=ChangeServo,0,p1';
+  $.get($call, function(data) 
   {
-    if (this.readyState == 4 && this.status == 200) 
-    {
-      document.getElementById("demo").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "test.txt", true);
-  xhttp.send();*/
-}
+     $('#servo_a').empty().append(data);
+  });
+} 
+
+function p10()
+{
+  $call = 'send-command-get-reply.php?args=ChangeServo,0,p10';
+  $.get($call, function(data) 
+  {
+     $('#servo_a').empty().append(data);
+  });
+} 
+
+function setA()
+{
+  $angle = document.getElementById("angle").value;
+  $call = 'send-command-get-reply.php?args=ChangeServo,0,setAngle,' + $angle;
+  $.get($call, function(data) 
+  {
+     $('#servo_a').empty().append(data);
+  });
+} 
+
 </script>
- 
+
+</head>
+
+<body>
+
+<button onclick="p1()">+1</button>
+<br>
+<button onclick="p10()">+10</button>
+<br>
+<button onclick="setA()">Set angle to </button><input type="text" id="angle" size="4">
+<br>
+Servo angle: <span id="servo_a">Boo!</span>
+   
 </body>
 </html>
 
--->
 
 
