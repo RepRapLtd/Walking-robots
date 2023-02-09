@@ -2,19 +2,48 @@
 
 <HEAD>
 
-
-
-
 <TITLE>RepRap Ltd Quadruped Robot</TITLE>
 
 <link rel="stylesheet" href="styles.css">
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+
+<script>
+
+$currentServo = 0;
+  
+function changeServoAngle($delta)
+{
+  $call = 'send-command-get-reply.php?args=ChangeServo,' + $currentServo + ',' + $delta;
+  $.get($call, function(data) 
+  {
+     $('#servo_a').empty().append(data);
+  });
+} 
+
+function setA()
+{
+  $angle = document.getElementById("angle").value;
+  $call = 'send-command-get-reply.php?args=ChangeServo,0,setAngle,' + $angle;
+  $.get($call, function(data) 
+  {
+     $('#servo_a').empty().append(data);
+  });
+}
+
+function setServo($s)
+{
+ $currentServo = $s;
+ document.getElementById("servoNumber").textContent = $currentServo;
+}
+
+</script>
+
 
 </HEAD>
 
 <BODY>
 <?php include('header.php'); ?>
-
-<H2>Servos</H2>
 
 <button type="submit" value="Home" > Zero Servos </button> <button type="submit" value="Home" > Save current position as zeros </button> <!-- Need to set what the buttons do as currently same as "Home" Button below -->
 <br>
@@ -23,48 +52,44 @@
 
 <table>
   
-  <tr align="left"><th><a href="servo.php?s=0">Servo 0</a> 
-  <p>Select Servo</p>
-<input type="radio" id="0" name="Servo" value="0"checked="checked"> 
+<tr align="left"><th> 
+<p>Select Servo</p>
+<input type="radio" id="0" name="Servo" value="0" checked="checked" onclick="setServo(0);"> 
 <label for="0">0</label> <br>
-<input type="radio" id="1" name="Servo" value="1">
+<input type="radio" id="1" name="Servo" value="1" onclick="setServo(1);">
 <label for="1">1</label><br>
-<input type="radio" id="6" name="Servo" value="6">
+<input type="radio" id="6" name="Servo" value="6" onclick="setServo(6);">
 <label for="6">6</label><br>
-<input type="radio" id="7" name="Servo" value="7">
+<input type="radio" id="7" name="Servo" value="7" onclick="setServo(7);">
 <label for="7">7</label><br>  
-<input type="radio" id="8" name="Servo" value="8">
+<input type="radio" id="8" name="Servo" value="8" onclick="setServo(8);">
 <label for="8">8</label><br>
-<input type="radio" id="9" name="Servo" value="9">
+<input type="radio" id="9" name="Servo" value="9" onclick="setServo(9);">
 <label for="9">9</label><br>
-<input type="radio" id="12" name="Servo" value="12">
+<input type="radio" id="12" name="Servo" value="12" onclick="setServo(12);">
 <label for="12">12</label><br>
-<input type="radio" id="14" name="Servo" value="14">
+<input type="radio" id="14" name="Servo" value="14" onclick="setServo(14);">
 <label for="14">14</label><br>
-<input type="radio" id="15" name="Servo" value="15">
+<input type="radio" id="15" name="Servo" value="15" onclick="setServo(15);">
 <label for="15">15</label><br>
 
-  </th><th rowspan="9">
+</th><th rowspan="1">
 
-<h2> <?php 
-$servo=$_GET["s"];
-echo 'Servo ' . htmlspecialchars($servo) ;?>
-</h2>
+<h2>Servo <span id="servoNumber">0</span></h2>
 
-Angle: <?php 
- $output = shell_exec('python3 send-command-get-reply.py GetServoAngle '.$servo );
-
- echo $output; 
-?>     <sup>o</sup>
+Angle: <span id="servo_a">0</span><sup>o</sup>
 <br>
 <br>
+
+<button value="Home" > Home </button>
+<button onclick="changeServoAngle('p1');"> +1 </button>
+<button onclick="changeServoAngle('p10');"> +10 </button>
+<button onclick="changeServoAngle('m1');"> -1 </button>
+<button onclick="changeServoAngle('m10');"> -10 </button>
+
 <form id="myForm">
  
-<button type="submit" value="Home" > Home </button>
-<button type="submit" value="+1" > +1 </button>
-<button type="submit" value="+10" > +10 </button>
-<button type="submit" value="-1" > -1 </button>
-<button type="submit" value="-10" > -10 </button>
+
 
 <br>
 <br> <label for="myName">Set angle:</label>
@@ -78,14 +103,6 @@ Angle: <?php
 <button type="submit" value="-negate" > Negate Direction </button>
 
 </form></th></tr>
-  <tr align="left"><th><a href="servo.php?s=1">Servo 1</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=6">Servo 6</a></th></tr> 
-  <tr align="left"><th><a href="servo.php?s=7">Servo 7</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=8">Servo 8</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=9">Servo 9</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=12">Servo 12</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=14">Servo 14</a></th></tr>
-  <tr align="left"><th><a href="servo.php?s=15">Servo 15</a></th></tr> 
  
 </table>
 
