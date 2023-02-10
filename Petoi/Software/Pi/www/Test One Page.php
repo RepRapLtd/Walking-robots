@@ -10,21 +10,33 @@
 
 <script>
 
-$currentServo = 0;
+$lastServo = 0;
+$servoAngle = 0;
   
 function changeServoAngle($delta)
 {
-  $call = 'send-command-get-reply.php?args=ChangeServo,' + $currentServo + ',' + $delta;
+  $call = 'send-command-get-reply.php?args=ChangeServo,' + $lastServo + ',' + $delta;
   $.get($call, function(data) 
   {
      $('#servo_a').empty().append(data);
   });
-} 
+}
+
+function getServoAngle()
+{
+  $call = 'send-command-get-reply.php?args=GetServoAngle,' + $lastServo;
+  $.get($call, function(data) 
+  {
+     $servoAngle = data;
+     $('#servo_a').empty().append(data);
+  });
+}
+
 
 function setA()
 {
   $angle = document.getElementById("angle").value;
-  $call = 'send-command-get-reply.php?args=ChangeServo,0,setAngle,' + $angle;
+  $call = 'send-command-get-reply.php?args=ChangeServo,' + $lastServo + ',setAngle,' + $angle;
   $.get($call, function(data) 
   {
      $('#servo_a').empty().append(data);
@@ -33,8 +45,9 @@ function setA()
 
 function setServo($s)
 {
- $currentServo = $s;
- document.getElementById("servoNumber").textContent = $currentServo;
+ $lastServo = $s;
+ document.getElementById("servoNumber").textContent = $lastServo;
+ getServoAngle();
 }
 
 </script>
@@ -45,9 +58,7 @@ function setServo($s)
 <BODY>
 <?php include('header.php'); ?>
 
-<button type="submit" value="Home" > Zero Servos </button> <button type="submit" value="Home" > Save current position as zeros </button> <!-- Need to set what the buttons do as currently same as "Home" Button below -->
-<br>
-<br>
+<H1>Servos</H1>
 
 
 <table>
@@ -86,25 +97,29 @@ Angle: <span id="servo_a">0</span><sup>o</sup>
 <button onclick="changeServoAngle('p10');"> +10 </button>
 <button onclick="changeServoAngle('m1');"> -1 </button>
 <button onclick="changeServoAngle('m10');"> -10 </button>
+<br><br><br>
+<button onclick="setA()">Set angle to </button><input type="text" id="angle" size="4">
 
-<form id="myForm">
- 
+<br><br><br>
 
-
-<br>
-<br> <label for="myName">Set angle:</label>
-  <input id="myName" name="name" value="" />
-<button type="submit" value="set" >Set </button>
-<br>
-<br>
 <button type="submit" value="save" > Save current angle as offset</button>
 <br>
 <br>
+
 <button type="submit" value="-negate" > Negate Direction </button>
 
-</form></th></tr>
+<br>
+<br>
+</th></tr>
  
 </table>
+
+
+<br>
+<br>
+<button type="submit" value="Home" > Zero Servos </button> <button type="submit" value="Home" > Save current position as zeros </button> <!-- Need to set what the buttons do as currently same as "Home" Button below -->
+
+
 
 
 
