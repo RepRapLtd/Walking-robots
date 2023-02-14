@@ -128,18 +128,18 @@ function AtStart($s, $l)
 
 </th>
 <th>
-
-<h2>Servo <span id="servoNumber">0</span></h2>
+<br>
+<h3>Servo <span id="servoNumber">0</span></h3>
 
 Angle: <span id="servo_a">0</span><sup>o</sup>
 <br>
 <br>
 
 <button value="Home" onclick="setA(0);" > Home </button>
+<button onclick="changeServoAngle('m10');"> -10 </button>
+<button onclick="changeServoAngle('m1');"> -1 </button>
 <button onclick="changeServoAngle('p1');"> +1 </button>
 <button onclick="changeServoAngle('p10');"> +10 </button>
-<button onclick="changeServoAngle('m1');"> -1 </button>
-<button onclick="changeServoAngle('m10');"> -10 </button>
 <br><br><br>
 <button onclick="setA(document.getElementById('angle').value);">Set angle to</button> <input type="text" id="angle" size="4">
 
@@ -189,6 +189,39 @@ Angle: <span id="servo_a">0</span><sup>o</sup>
 ?>
 
 </th>
+<th>
+<br>
+<h3>Leg <span id="legName">leg</span></h3>
+
+Position: x = <span id="legX">0</span>, y = <span id="legY">0</span> mm
+<br>
+<br>
+
+<button value="Home" onclick="setLegPos(0, 0);" > Home </button><br><br>
+x: 
+<button onclick="changeLegPos(-5, 0);"> -5 </button>
+<button onclick="changeLegPos(-1, 0);"> -1 </button>
+<button onclick="changeLegPos(1, 0);"> +1 </button>
+<button onclick="changeLegPos(5, 0);"> +5 </button>
+
+
+<br>
+y: 
+<button onclick="changeLegPos(0, -5);"> -5 </button>
+<button onclick="changeLegPos(0, -1);"> -1 </button>
+<button onclick="changeLegPos(0, 1);"> +1 </button>
+<button onclick="changeLegPos(0, 5);"> +5 </button>
+
+
+<br><br><br>
+<button onclick="setLegPos(document.getElementById('xPos').value, document.getElementById('yPos').value);">Move to</button> x = <input type="text" id="xPos" size="3">, y = <input type="text" id="yPos" size="3">
+
+<br><br><br>
+
+<br>
+<br>
+</th>
+
   </tr>
  
 </table>
