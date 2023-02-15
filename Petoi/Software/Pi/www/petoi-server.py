@@ -69,8 +69,6 @@ else:
 encoding = "utf-8"
 
 robot = rrlp.Robot()
-lastServo = robot.servos.activeServos[0]
-lastLeg = robot.legs[0]
 if debug:
  print("Robot initialised")
 
@@ -99,8 +97,7 @@ def GetLegDescription(legName):
  
 def GetServoAngle(servoNumber):
  servo = int(servoNumber)
- lastServo = servo
- return str(robot.servos.angle[servo])
+ return "{:.1f}".format(robot.servos.angle[servo])
  
 def GetVoltages():
  return robot.aToD.GetAllValues()
@@ -110,13 +107,10 @@ def GetActiveServos():
  for servo in robot.servos.activeServos:
   reply += str(servo) + " "
  return reply
- 
-def GetLastServo():
- return str(lastServo)
- 
-def GetLastLeg():
- return lastLeg.name 
 
+
+def ServoChangedUpdateLegs():
+ robot.UpdateAllLegs()
 
 # ChangeServo servo option [angle]
 
@@ -124,14 +118,9 @@ def ChangeServo(tokens):
  servo = int(tokens[1])
  lastServo = servo
  option = tokens[2]
- if option == "p1":
-  robot.servos.SetAngle(servo, robot.servos.angle[servo] + 1)
- elif option == "m1":
-  robot.servos.SetAngle(servo, robot.servos.angle[servo] - 1)
- elif option == "p10":
-  robot.servos.SetAngle(servo, robot.servos.angle[servo] + 10)
- elif option == "m10":
-  robot.servos.SetAngle(servo, robot.servos.angle[servo] - 10)
+ if option == "changeBy":
+  angle = float(tokens[3])
+  robot.servos.SetAngle(servo, robot.servos.angle[servo] + angle)
  elif option == "zero":
   robot.servos.SetAngle(servo, 0)
  elif option == "setAngle":
@@ -144,6 +133,7 @@ def ChangeServo(tokens):
  else:
   reply = "EditServo - dud option: " + option
   return reply
+ ServoChangedUpdateLegs()
  reply = str(robot.servos.angle[servo])
  return reply
  
@@ -151,18 +141,17 @@ def ChangeServo(tokens):
 # MoveLegFast name x y
 
 def MoveLegFast(tokens):
- reply = ""
  leg = robot.GetLegFromName(tokens[1])
  x = float(tokens[2])
  y = float(tokens[3])
  point = [(x, y), 1, True]
  leg.QuickToPoint(point)
+ reply = GetLegPosition(tokens[1])
  return reply
  
 # MoveLegStraight name x y v
 
 def MoveLegStraight(tokens):
- reply = ""
  leg = robot.GetLegFromName(tokens[1])
  x = float(tokens[2])
  y = float(tokens[3])
@@ -170,9 +159,14 @@ def MoveLegStraight(tokens):
  point = [(x, y), v, True]
  t = leg.StraightToPoint(point) + 1
  robot.SpinForTime(t)
+ reply = GetLegPosition(tokens[1])
  return reply
  
-
+def GetLegPosition(legName):
+ leg = robot.GetLegFromName(legName)
+ p = leg.Position()
+ reply = "{:.1f}".format(p[0]) + " " + "{:.1f}".format(p[1])
+ return reply
  
 def Interpret(command):
  tokens = command.split()
@@ -195,12 +189,9 @@ def Interpret(command):
  elif tokens[0] == "GetActiveServos":
   # GetActiveServos
   reply = GetActiveServos()
- elif tokens[0] == "GetLastServo":
-  # GetLastServo
-  reply = GetLastServo()
- elif tokens[0] == "GetLastLeg":
-  # GetLastLeg
-  reply = GetLastLeg()   
+ elif tokens[0] == "GetLegPosition":
+  # GetLegPosition legNmae
+  reply = GetLegPosition(tokens[1])
  elif tokens[0] == "MoveLegFast":
   # MoveLegFast name x y
   reply = MoveLegFast(tokens) 

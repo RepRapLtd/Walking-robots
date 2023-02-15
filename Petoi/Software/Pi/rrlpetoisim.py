@@ -864,6 +864,13 @@ class Robot:
     return leg
   self.err = "There's no leg called " + name + ". Returning legs[0]."
   return self.legs[0]
+ 
+ 
+ # If a servo has moved call this to update leg positions
+ 
+ def UpdateAllLegs(self):
+  for leg in self.legs:
+   leg.SetFromServoAngles()
   
  def Spin(self):
   for leg in self.legs:
@@ -873,7 +880,7 @@ class Robot:
   for leg in self.legs:
    leg.Stop()
    
- def SpintForTime(self, t):
+ def SpinForTime(self, t):
   end = time.time() + t
   while time.time() < t:
    self.Spin()

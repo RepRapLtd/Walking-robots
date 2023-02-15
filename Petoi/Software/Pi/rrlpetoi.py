@@ -858,7 +858,7 @@ class Robot:
   for leg in self.legs:
    leg.Stop()
    
- def SpintForTime(self, t):
+ def SpinForTime(self, t):
   end = time.time() + t
   while time.time() < t:
    self.Spin()
