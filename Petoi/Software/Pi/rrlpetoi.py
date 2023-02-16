@@ -857,6 +857,10 @@ class Robot:
  def Stop(self):
   for leg in self.legs:
    leg.Stop()
+
+ def UpdateAllLegs(self):
+  for leg in self.legs:
+   leg.SetFromServoAngles()
    
  def SpinForTime(self, t):
   end = time.time() + t
