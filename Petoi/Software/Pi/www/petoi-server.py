@@ -109,9 +109,6 @@ def GetActiveServos():
  return reply
 
 
-def ServoChangedUpdateLegs():
- robot.UpdateAllLegs()
-
 # ChangeServo servo option [angle]
 
 def ChangeServo(tokens):
@@ -133,8 +130,15 @@ def ChangeServo(tokens):
  else:
   reply = "EditServo - dud option: " + option
   return reply
- ServoChangedUpdateLegs()
+ robot.UpdateAllLegs()
  reply = str(robot.servos.angle[servo])
+ return reply
+ 
+ 
+def GetLegPosition(legName):
+ leg = robot.GetLegFromName(legName)
+ p = leg.Position()
+ reply = "{:.1f}".format(p[0]) + " " + "{:.1f}".format(p[1])
  return reply
  
 
@@ -144,7 +148,7 @@ def MoveLegFast(tokens):
  leg = robot.GetLegFromName(tokens[1])
  x = float(tokens[2])
  y = float(tokens[3])
- point = [(x, y), 1, True]
+ point = [(x, y), 1, False]
  leg.QuickToPoint(point)
  reply = GetLegPosition(tokens[1])
  return reply
@@ -162,11 +166,7 @@ def MoveLegStraight(tokens):
  reply = GetLegPosition(tokens[1])
  return reply
  
-def GetLegPosition(legName):
- leg = robot.GetLegFromName(legName)
- p = leg.Position()
- reply = "{:.1f}".format(p[0]) + " " + "{:.1f}".format(p[1])
- return reply
+
  
 def Interpret(command):
  tokens = command.split()

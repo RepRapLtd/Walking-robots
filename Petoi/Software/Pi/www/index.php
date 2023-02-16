@@ -238,7 +238,7 @@ Position: x = <span id="legX">0</span>, y = <span id="legY">0</span> mm
 <br>
 <br>
 
-<button value="Home" onclick="setLegPos(0, 0);" > Home </button><br><br>
+<button value="Home" onclick="changeLegPos(-$legX, -$legY);" > Home </button><br><br>
 x: 
 <button onclick="changeLegPos(-5, 0);"> -5 </button>
 <button onclick="changeLegPos(-1, 0);"> -1 </button>
