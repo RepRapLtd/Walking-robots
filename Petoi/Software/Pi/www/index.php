@@ -21,7 +21,7 @@ Quadruped Robot Web-page-based Control
 
 Version 1
 
-Sall Bowyer
+Sally Bowyer
 Adrian Bowyer
 
 RepRap Ltd
@@ -127,6 +127,70 @@ function changeServoAngle($delta)
   });
 }
 
+/* Make the current servo postion its zero position */
+
+function SaveCurrentAngleAsOffset()
+{
+  $call = 'send-command-get-reply.php?args=ChangeServo,' + $currentServo + ',saveCurrentAngleAsOffset';
+  $.get($call, function(data) 
+  {
+     $('#servo_a').empty().append(data);
+     getLegPosition(); // Leg may have moved
+  });
+}
+
+/* Make the servo go in the oposite direction */
+
+function NegateDirection()
+{
+  $call = 'send-command-get-reply.php?args=ChangeServo,' + $currentServo + ',gegateDirection';
+  $.get($call, function(data) 
+  {
+     $('#servo_a').empty().append(data);
+     getLegPosition(); // Leg may have moved
+  });
+}
+
+
+/*ZeroServos */
+
+function ZeroServos()
+{
+  $call = 'send-command-get-reply.php?args=ZeroServos'
+  $.get($call, function(data) 
+  {
+     getLegPosition(); // Leg may have moved
+     getServoAngle(); // Servo may have moved
+  });
+}
+
+/*ZeroServos */
+
+function ZeroServos()
+{
+  $call = 'send-command-get-reply.php?args=ZeroServos'
+  $.get($call, function(data) 
+  {
+     getLegPosition(); // Leg may have moved
+     getServoAngle(); // Servo may have moved
+  });
+}
+
+/* SaveCurrentPositionAsZeros; */
+
+function SaveCurrentPositionAsZeros()
+{
+  $call = 'send-command-get-reply.php?args=SaveCurrentPositionAsZeros'
+  $.get($call, function(data) 
+  {
+     getLegPosition(); // Leg may have moved
+     getServoAngle(); // Servo may have moved
+  });
+}
+
+
+
+
 /* The getServoAngle() function gets the angle that $currentServo is at and updates the web page angle text.*/
 
 function getServoAngle()
@@ -229,6 +293,48 @@ function AtStart($s, $l)
 	chooseLeg($l);
 }
 
+/* Refresh Accelerometer */
+
+function RefreshAccelerometer()
+{
+  $call = 'send-command-get-reply.php?args=RefreshAccelerometer'
+  $.get($call, function(data) 
+  {
+     $('#Accelerometer').empty().append(data);
+    
+  });
+}
+
+
+
+/* Get Voltages */
+
+function GetVoltages()
+{
+  $call = 'send-command-get-reply.php?args=GetVoltages'
+  $.get($call, function(data) 
+  {
+   $('#voltages').empty().append(data);
+    
+  });
+}
+
+/* Get Range */
+
+function GetRange()
+{
+  $call = 'send-command-get-reply.php?args=GetRange'
+  $.get($call, function(data) 
+  {
+   $('#range').empty().append(data);
+    
+  });
+}
+
+
+
+
+
 </script>
 
 
@@ -326,12 +432,10 @@ Angle: <span id="servo_a">0</span><sup>o</sup>
 
 <!-- ***TODO all these. -->
 
-<button type="submit" value="save" > Save current angle as offset</button>
+<button onclick="SaveCurrentAngleAsOffset();" > Save current angle as offset </button> 
 <br>
 <br>
-
-<button type="submit" value="-negate" > Negate Direction </button>
-
+<button onclick="negateDirection();" > Negate Direction </button> 
 <br>
 <br>
 </th></tr>
@@ -341,9 +445,7 @@ Angle: <span id="servo_a">0</span><sup>o</sup>
 
 <br>
 <br>
-<button type="submit" value="Home" > Zero Servos </button> <button type="submit" value="Home" > Save current position as zeros </button> 
-
-
+<button onclick="ZeroServos();" > Zero Servos </button> <button onclick="SaveCurrentPositionAsZeros();" > Save current position as zeros </button>
 <br><br><hr>
 <H2>Legs</H2>
 
@@ -427,12 +529,17 @@ y:
 
 </table>
 
-
+<!-- ***TODO create buttons for these. -->
 <table>
   <tr align="left"><th><a href="accelerometer.php">Accelerometer</a></th></tr>
   <tr align="left"><th><a href="range.php">Range</a></th></tr>
   <tr align="left"><th><a href="voltages.php">Voltages</a></th></tr>
 </table>
+
+
+<span id="Voltages">0</span>
+<span id="Accelerometer">0</span>
+<span id="Range">0</span>
 
 </BODY>
 

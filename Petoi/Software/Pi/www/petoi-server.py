@@ -189,6 +189,10 @@ def Interpret(command):
  elif tokens[0] == "GetActiveServos":
   # GetActiveServos
   reply = GetActiveServos()
+ elif tokens[0] == "ZeroServos":
+  robot.servos.GoToZeros()
+ elif tokens[0] == "SaveCurrentPositionAsZeros":
+  robot.servos.SaveZeros()  
  elif tokens[0] == "GetLegPosition":
   # GetLegPosition legNmae
   reply = GetLegPosition(tokens[1])
