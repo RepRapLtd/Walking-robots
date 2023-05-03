@@ -291,6 +291,7 @@ function AtStart($s, $l)
 {
 	chooseServo($s);
 	chooseLeg($l);
+	GetVoltages();
 }
 
 /* Refresh Accelerometer */
@@ -314,7 +315,8 @@ function GetVoltages()
   $call = 'send-command-get-reply.php?args=GetVoltages'
   $.get($call, function(data) 
   {
-   $('#voltages').empty().append(data);
+   data = data.replace(/\n/g,"<br>");
+   $('#V0').empty().append(data);
     
   });
 }
@@ -540,6 +542,11 @@ y:
 <span id="Voltages">0</span>
 <span id="Accelerometer">0</span>
 <span id="Range">0</span>
+
+
+<br>
+<button value="Get Voltages" onclick="GetVoltages();" > Get Voltages </button><br>
+Voltages: <br><span id="V0"></span>
 
 </BODY>
 
