@@ -102,6 +102,12 @@ def GetServoAngle(servoNumber):
 def GetVoltages():
  return robot.aToD.GetAllValues()
  
+def GetRange():
+ return str(robot.range.Distance()) + "mm"
+ 
+def GetAccelerometer():
+ return robot.accelerometer.GetAllValues()
+ 
 def GetActiveServos():
  reply = ""
  for servo in robot.servos.activeServos:
@@ -185,7 +191,13 @@ def Interpret(command):
   reply = GetServoAngle(tokens[1])
  elif tokens[0] == "GetVoltages":
   # GetVoltages
-  reply = GetVoltages() 
+  reply = GetVoltages()
+ elif tokens[0] == "GetAccelerometer":
+  # GetAccelerometer
+  reply = GetAccelerometer()
+ elif tokens[0] == "GetRange":
+  # GetRange
+  reply = GetRange() 
  elif tokens[0] == "GetActiveServos":
   # GetActiveServos
   reply = GetActiveServos()

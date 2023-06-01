@@ -299,11 +299,14 @@ class Accelerometer:
  def Accelerations(self):
   return [1, 2, 3]
  
- def Gyro(self):
+ def Gyros(self):
   return [4, 5, 6]
   
  def Temperature(self):
   return 0
+
+ def GetAllValues(self):
+  return str(self.Accelerations()) + " " + str(self.Gyros()) + " " + str(self.Temperature())
   
  def Shutdown(self):
   pass

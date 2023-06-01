@@ -292,6 +292,8 @@ function AtStart($s, $l)
 	chooseServo($s);
 	chooseLeg($l);
 	GetVoltages();
+	GetAccelerometer();
+	GetRange();
 }
 
 /* Refresh Accelerometer */
@@ -316,7 +318,7 @@ function GetVoltages()
   $.get($call, function(data) 
   {
    data = data.replace(/\n/g,"<br>");
-   $('#V0').empty().append(data);
+   $('#voltageData').empty().append(data);
     
   });
 }
@@ -328,12 +330,22 @@ function GetRange()
   $call = 'send-command-get-reply.php?args=GetRange'
   $.get($call, function(data) 
   {
-   $('#range').empty().append(data);
+   $('#rangeData').empty().append(data);
     
   });
 }
 
+/* Get Accelerometer */
 
+function GetAccelerometer()
+{
+  $call = 'send-command-get-reply.php?args=GetAccelerometer'
+  $.get($call, function(data) 
+  {
+   $('#accelerometerData').empty().append(data);
+    
+  });
+}
 
 
 
@@ -531,22 +543,26 @@ y:
 
 </table>
 
-<!-- ***TODO create buttons for these. -->
-<table>
-  <tr align="left"><th><a href="accelerometer.php">Accelerometer</a></th></tr>
-  <tr align="left"><th><a href="range.php">Range</a></th></tr>
-  <tr align="left"><th><a href="voltages.php">Voltages</a></th></tr>
-</table>
-
-
-<span id="Voltages">0</span>
-<span id="Accelerometer">0</span>
-<span id="Range">0</span>
-
+<hr>
 
 <br>
 <button value="Get Voltages" onclick="GetVoltages();" > Get Voltages </button><br>
-Voltages: <br><span id="V0"></span>
+Voltages: <br><span id="voltageData"></span>
+
+<hr>
+
+<br>
+<button value="Get Accelerometer" onclick="GetAccelerometer();" > Get Accelerometer </button><br>
+Accelerometer: <br><span id="accelerometerData"></span>
+
+
+<hr>
+
+<br>
+<button value="Get Range" onclick="GetRange();" > Get Range </button><br>
+Range: <br><span id="rangeData"></span>
+
+
 
 </BODY>
 

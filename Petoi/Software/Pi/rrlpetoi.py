@@ -292,11 +292,14 @@ class Accelerometer:
  def Accelerations(self):
   return self.mpu.acceleration
  
- def Gyro(self):
+ def Gyros(self):
   return self.mpu.gyro
   
  def Temperature(self):
   return self.mpu.temperature
+  
+ def GetAllValues(self):
+  return str(self.Accelerations()) + " " + str(self.Gyros()) + " " + str(self.Temperature())
   
  def Shutdown(self):
   pass
