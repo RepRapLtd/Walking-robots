@@ -214,6 +214,9 @@ def Interpret(command):
  elif tokens[0] == "MoveLegStraight":
   # MoveLegStraight name x y v
   reply = MoveLegStraight(tokens)
+ elif tokens[0] == "GetLegRow":
+  # GetLegRow legName
+  reply = robot.GetRowValues(tokens[1])
  elif tokens[0] == "Exit":
   robot.Shutdown()
   sys.exit(0)

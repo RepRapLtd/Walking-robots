@@ -335,6 +335,18 @@ function GetRange()
   });
 }
 
+/* Get Leg row pattern */
+
+function GetRowValues()
+{
+  $call = 'send-command-get-reply.php?args=GetRowValues,' + $currentLeg
+  $.get($call, function(data) 
+  {
+   $('#LegRowData').empty().append($currentLeg + " row pattern: " + data);
+    
+  });
+}
+
 /* Get Accelerometer */
 
 function GetAccelerometer()
@@ -346,7 +358,6 @@ function GetAccelerometer()
     
   });
 }
-
 
 
 </script>

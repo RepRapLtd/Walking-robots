@@ -542,7 +542,13 @@ class Row:
    diff = maths.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
    totalT += diff/previous[1]
    previous = point
-  return totalT  
+  return totalT
+  
+ def GetAllValues(self):
+  result = ""
+  for row in self.rowPoints:
+   result += "(x, y): " + str(row[0]) + ", v: " + str(row[1]) + ", sense: " + str(row[2]) + "\n"
+  return result 
   
 #
 #############################################################################################  
@@ -896,6 +902,10 @@ class Robot:
    
  def SupplyVoltage(self):
   return self.aToD.SupplyVoltage()
+  
+ def GetRowValues(self, legName):
+  leg = self.GetLegFromName(legName)
+  return leg.row.GetAllValues()
   
  def Shutdown(self):
   self.servos.Shutdown()
