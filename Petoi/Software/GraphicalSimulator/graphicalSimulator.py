@@ -9,71 +9,55 @@
 # Licence: GPL
 #
 
+import open3d as o3d
 import numpy as np
-import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d as mplot3d
-from matplotlib.animation import FuncAnimation
-from stl import mesh
+import copy
+import time
 
-# Load your STL file (replace 'your_file.stl' with your file path)
-your_mesh = mesh.Mesh.from_file('ab.stl')
+def create_mesh_cylinder(radius, height, resolution=30, color=[0.0, 0.5, 1.0]):
+    mesh = o3d.geometry.TriangleMesh.create_cylinder(radius=radius, height=height, resolution=resolution, split=4)
+    mesh.compute_vertex_normals()
+    mesh.paint_uniform_color(color)
+    return mesh
 
-def calculate_normals(your_mesh):
-    normals = []
-    for face in your_mesh.vectors:
-        v1 = face[1] - face[0]
-        v2 = face[2] - face[0]
-        normal = np.cross(v1, v2)
-        normal /= np.linalg.norm(normal)
-        normals.append(normal)
-    return np.array(normals)
+def main():
+    # Load STL file
+    #stl_mesh = o3d.io.read_triangle_mesh("bodyAssembly.stl")
+    stl_mesh = o3d.io.read_triangle_mesh("ab.stl")
+    stl_mesh.compute_vertex_normals()
 
-def create_cylinder(radius, height, elevation=0, resolution=30):
-    u = np.linspace(0, 2 * np.pi, resolution)
-    v = np.linspace(0, height, resolution)
-    U, V = np.meshgrid(u, v)
-    X = radius * np.cos(U)
-    Y = radius * np.sin(U)
-    Z = V + elevation
-    return X, Y, Z
+    # Create first cylinder
+    cylinder = create_mesh_cylinder(0.2, 1.0, color=[0.0, 0.5, 1.0])
 
-def update(frame):
-    angle = frame / 2
-    ax.cla()
-    ax.set_xlim(-1, 1)
-    ax.set_ylim(-1, 1)
-    ax.set_zlim(0, 2)
+    # Initialize Visualizer
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
 
-    # First cylinder (static)
-    X, Y, Z = create_cylinder(0.2, 1)
-    ax.plot_surface(X, Y, Z, color='blue', alpha=0.6)
+    # Add geometries to visualizer
+    vis.add_geometry(cylinder)
+    vis.add_geometry(stl_mesh)
 
-    # Rotate the mesh
-    transformed_mesh = mesh.Mesh(your_mesh.data.copy())
-    transformed_mesh.rotate([0.5, 0.5, 0.5], angle)
-    transformed_mesh.translate([0, 0, 1])
+    for frame in range(360):
+        angle = frame / 20.0
+        R = stl_mesh.get_rotation_matrix_from_xyz((0, angle, 0))
 
-    # Calculate normals and simulate lighting
-    normals = calculate_normals(transformed_mesh)
-    light_direction = np.array([0, 0, 1])  # Change as needed
-    intensities = np.dot(normals, light_direction)
+        # Rotate STL mesh
+        rotated_mesh = copy.deepcopy(stl_mesh)
+        rotated_mesh.rotate(R, center=(0, 0, 0))
 
-    # Create a color array based on intensities
-    colors = plt.cm.viridis((intensities - intensities.min()) / (intensities.max() - intensities.min()))
+        # Clear previous geometries
+        vis.clear_geometries()
 
-    # Create and add the collection to the plot with matching edge colors
-    poly3d = mplot3d.art3d.Poly3DCollection(transformed_mesh.vectors, facecolors=colors, edgecolors=colors)
-    ax.add_collection3d(poly3d)
+        # Add updated geometries
+        vis.add_geometry(cylinder)
+        vis.add_geometry(rotated_mesh)
 
-    # Remove the axes and make panes transparent
-    ax.set_axis_off()
-    ax.grid(False)
-    ax.xaxis.pane.fill = False
-    ax.yaxis.pane.fill = False
-    ax.zaxis.pane.fill = False
+        vis.poll_events()
+        vis.update_renderer()
+        time.sleep(0.05)
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+    vis.destroy_window()
 
-ani = FuncAnimation(fig, update, frames=np.linspace(0, 2*np.pi, 360), interval=25)
-plt.show()
+if __name__ == "__main__":
+    main()
+
