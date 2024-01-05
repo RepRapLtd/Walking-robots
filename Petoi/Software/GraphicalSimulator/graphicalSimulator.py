@@ -12,20 +12,20 @@
 
 from stl import mesh
 import pygame
-import numpy
+import numpy as np
 
 def rotation_matrix(dx, dy):
-    Rx = numpy.array([[1, 0, 0, 0],
-                   [0, numpy.cos(dy), -numpy.sin(dy), 0],
-                   [0, numpy.sin(dy), numpy.cos(dy), 0],
+    Rx = np.array([[1, 0, 0, 0],
+                   [0, np.cos(dy), -np.sin(dy), 0],
+                   [0, np.sin(dy), np.cos(dy), 0],
                    [0, 0, 0, 1]])
 
-    Ry = numpy.array([[numpy.cos(dx), 0, numpy.sin(dx), 0],
+    Ry = np.array([[np.cos(dx), 0, np.sin(dx), 0],
                    [0, 1, 0, 0],
-                   [-numpy.sin(dx), 0, numpy.cos(dx), 0],
+                   [-np.sin(dx), 0, np.cos(dx), 0],
                    [0, 0, 0, 1]])
 
-    return numpy.dot(Rx, Ry)
+    return np.dot(Rx, Ry)
 
 
 def project3d_to_2d( vertex ):
@@ -52,8 +52,8 @@ def is_clockwise(points):
 
 def surface_normal( surface ):
 
-    surface = numpy.array( surface )
-    n = numpy.array( ( 0.0,) * 3 )
+    surface = np.array( surface )
+    n = np.array( ( 0.0,) * 3 )
 
     for i, a in enumerate( surface ):
         b = surface [ ( i + 1 ) % len( surface ), : ]
@@ -61,14 +61,14 @@ def surface_normal( surface ):
         n[1] += ( a[2] - b[2] ) * ( a[0] + b[0] )
         n[2] += ( a[0] - b[0] ) * ( a[1] + b[1] )
 
-    norm = numpy.linalg.norm(n)
+    norm = np.linalg.norm(n)
     if norm==0: raise ValueError('zero norm')
     return n / norm
 
 
 def lerp_color( factor, color_a, color_b ):
-    color_a = numpy.array(color_a)
-    color_b = numpy.array(color_b)
+    color_a = np.array(color_a)
+    color_b = np.array(color_b)
     vector = color_b - color_a
     r = color_a + vector * factor
     return r
@@ -104,6 +104,20 @@ def rotate( mesh, rot, axis ):
                 vertex2[0], vertex2[1], vertex2[2],
                 vertex3[0], vertex3[1], vertex3[2], )
 
+def apply_rotation(vectors, rotation_matrix):
+    # Ensure the vectors array is a numpy array
+    vectors = np.array(vectors)
+
+    # Convert to homogeneous coordinates (add a fourth component, w=1)
+    homogenous_vectors = np.ones((vectors.shape[0], vectors.shape[1], 4))
+    homogenous_vectors[:, :, :3] = vectors
+
+    # Apply the rotation to each vertex
+    rotated_vectors = np.dot(homogenous_vectors, rotation_matrix.T)
+
+    # Convert back to 3D coordinates
+    return rotated_vectors[:, :, :3]
+
 
 def render( faces, z_rot, colors, ray ):
 
@@ -130,20 +144,7 @@ def render( faces, z_rot, colors, ray ):
             points = polygon,
         )
 
-    _quit = False
-    while not _quit:
-        for event in  pygame.event.get():
-
-            if event.type == pygame.QUIT:
-                _quit = True
-
-            elif event.type == pygame.KEYDOWN:
-                # press any key to quit
-                _quit = True
-
-
-        clock.tick( FPS )
-        pygame.display.update()
+    pygame.display.update()
 
 
 
@@ -171,7 +172,7 @@ if __name__ == '__main__':
     # of course you can find other stl files to test but you might have to scale and
     # offset the projection to get a good view of it. see project3d_to_2d.
     last_pos = None
-    rotation = numpy.identity(4)
+    rotation = np.identity(4)
 
 # Main loop
     running = True
@@ -183,19 +184,21 @@ if __name__ == '__main__':
                 if pygame.mouse.get_pressed()[0]:  # Check if left button is held
                     if last_pos:
                         dx, dy = event.rel
-                        dx = numpy.radians(dx * 0.1)
-                        dy = numpy.radians(dy * 0.1)
-                        rotation = numpy.dot(rotation_matrix(dx, dy), rotation)
+                        dx = np.radians(dx * 0.1)
+                        dy = np.radians(dy * 0.1)
+                        rotation = np.dot(rotation_matrix(dx, dy), rotation)
+                        #rotation = rotation_matrix(dx, dy)
                     last_pos = event.pos
                 else:
                     last_pos = None
+                    rotation = np.identity(4)
 
     # Apply rotation to the model
-    faces_array = numpy.array(faces.vectors)
-    rotated_faces = numpy.dot(faces_array.reshape(-1, 3), rotation[:3, :3].T).reshape(-1, 3, 3)
+        rotated_vectors = apply_rotation(faces.vectors, rotation)
+        #rotated_mesh = mesh.Mesh(np.zeros(rotated_vectors.shape, dtype=mesh.Mesh.dtype))
+        faces.vectors = rotated_vectors
 
-
-    render( faces, z_rot = z_rot, colors = ( color_a, color_b ), ray = ray )
+        render( faces, z_rot = z_rot, colors = ( color_a, color_b ), ray = ray )
 
     # NOTE: you can also write your own projection.
     #       implement it in project3d_to_2d (you might have to modify sort method after that)
