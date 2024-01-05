@@ -104,7 +104,7 @@ def rotate( mesh, rot, axis ):
                 vertex2[0], vertex2[1], vertex2[2],
                 vertex3[0], vertex3[1], vertex3[2], )
 
-def apply_rotation(vectors, rotation_matrix):
+def apply_transform(vectors, rotation_matrix):
     # Ensure the vectors array is a numpy array
     vectors = np.array(vectors)
 
@@ -123,8 +123,8 @@ def render( faces, z_rot, colors, ray ):
 
     screen.fill( 0x112233 )
 
-    for face in sorted( rotate( faces, z_rot, 'z' ), key = sort ):
-
+    #for face in sorted( rotate( faces, z_rot, 'z' ), key = sort ):
+    for face in sorted( faces, key = sort ):
         vertex1 = ( face[0], face[1], face[2] )
         vertex2 = ( face[3], face[4], face[5] )
         vertex3 = ( face[6], face[7], face[8] )
@@ -146,7 +146,21 @@ def render( faces, z_rot, colors, ray ):
 
     pygame.display.update()
 
+def scaling_matrix(scale_factor):
+    return np.array([
+        [scale_factor, 0, 0, 0],
+        [0, scale_factor, 0, 0],
+        [0, 0, scale_factor, 0],
+        [0, 0, 0, 1]
+    ])
 
+def translation_matrix(dx, dy, dz):
+    return np.array([
+        [1, 0, 0, dx],
+        [0, 1, 0, dy],
+        [0, 0, 1, dz],
+        [0, 0, 0, 1]
+    ])
 
 if __name__ == '__main__':
     pygame.init()
@@ -168,11 +182,12 @@ if __name__ == '__main__':
 
     # you can download the teapot stl file at: https://en.wikipedia.org/wiki/STL_(file_format)
     # remember to rename to to teapot.stl
+    #faces = mesh.Mesh.from_file( 'legTop.stl' )
     faces = mesh.Mesh.from_file( 'ab.stl' )
     # of course you can find other stl files to test but you might have to scale and
     # offset the projection to get a good view of it. see project3d_to_2d.
     last_pos = None
-    rotation = np.identity(4)
+    transform = np.identity(4)
 
 # Main loop
     running = True
@@ -180,24 +195,28 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 4:  # Scroll up
+                    #faces.vectors = apply_transform(faces.vectors, scaling_matrix(1.1))
+                    faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, 1.0))
+                elif event.button == 5:  # Scroll down
+                    #faces.vectors = apply_transform(faces.vectors, scaling_matrix(0.9))
+                    faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, -1.0))
             elif event.type == pygame.MOUSEMOTION:
-                if pygame.mouse.get_pressed()[0]:  # Check if left button is held
+                if pygame.mouse.get_pressed()[0]:  # Left button - rotation
                     if last_pos:
                         dx, dy = event.rel
                         dx = np.radians(dx * 0.1)
-                        dy = np.radians(dy * 0.1)
-                        rotation = np.dot(rotation_matrix(dx, dy), rotation)
-                        #rotation = rotation_matrix(dx, dy)
+                        dy = -np.radians(dy * 0.1)
+                        faces.vectors = apply_transform(faces.vectors, rotation_matrix(dx, dy))
+                    last_pos = event.pos
+                elif pygame.mouse.get_pressed()[2]:  # Right button - translation
+                    if last_pos:
+                        dx, dy = event.rel
+                        faces.vectors = apply_transform(faces.vectors, translation_matrix(dx * 0.01, -dy * 0.01, 0.0))
                     last_pos = event.pos
                 else:
                     last_pos = None
-                    rotation = np.identity(4)
-
-    # Apply rotation to the model
-        rotated_vectors = apply_rotation(faces.vectors, rotation)
-        #rotated_mesh = mesh.Mesh(np.zeros(rotated_vectors.shape, dtype=mesh.Mesh.dtype))
-        faces.vectors = rotated_vectors
-
         render( faces, z_rot = z_rot, colors = ( color_a, color_b ), ray = ray )
 
     # NOTE: you can also write your own projection.
