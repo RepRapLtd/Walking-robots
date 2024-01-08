@@ -167,7 +167,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode( ( 700, 700 ) )
     clock = pygame.time.Clock()
 
-    FPS = 60
+    #FPS = 60
 
     # test change this value to rotate the teapot ( it is in radians )
     z_rot = -1.1
@@ -197,11 +197,11 @@ if __name__ == '__main__':
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:  # Scroll up
-                    #faces.vectors = apply_transform(faces.vectors, scaling_matrix(1.1))
-                    faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, 1.0))
+                    faces.vectors = apply_transform(faces.vectors, scaling_matrix(1.1))
+                    #faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, 1.0))
                 elif event.button == 5:  # Scroll down
-                    #faces.vectors = apply_transform(faces.vectors, scaling_matrix(0.9))
-                    faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, -1.0))
+                    faces.vectors = apply_transform(faces.vectors, scaling_matrix(0.9))
+                    #faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, -1.0))
             elif event.type == pygame.MOUSEMOTION:
                 if pygame.mouse.get_pressed()[0]:  # Left button - rotation
                     if last_pos:
@@ -213,7 +213,7 @@ if __name__ == '__main__':
                 elif pygame.mouse.get_pressed()[2]:  # Right button - translation
                     if last_pos:
                         dx, dy = event.rel
-                        faces.vectors = apply_transform(faces.vectors, translation_matrix(dx * 0.01, -dy * 0.01, 0.0))
+                        faces.vectors = apply_transform(faces.vectors, translation_matrix(dx * 0.01, -dx * 0.01, -dy*0.1))
                     last_pos = event.pos
                 else:
                     last_pos = None
