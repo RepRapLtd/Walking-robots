@@ -7,219 +7,111 @@
 # https://reprapltd.com
 #
 # Licence: GPL
-# See: https://www.reddit.com/r/pygame/comments/ybnftb/render_stl_files_using_numpy_in_pygame_i_post/
+# See: https://github.com/amine0110/STL-Visualization
 #
 
-from stl import mesh
-import pygame
-import numpy as np
+import vtk
 
-def rotation_matrix(dx, dy):
-    Rx = np.array([[1, 0, 0, 0],
-                   [0, np.cos(dy), -np.sin(dy), 0],
-                   [0, np.sin(dy), np.cos(dy), 0],
-                   [0, 0, 0, 1]])
+actor_to_filename = {}  # Global dictionary to map actors to filenames
 
-    Ry = np.array([[np.cos(dx), 0, np.sin(dx), 0],
-                   [0, 1, 0, 0],
-                   [-np.sin(dx), 0, np.cos(dx), 0],
-                   [0, 0, 0, 1]])
+def get_stl_file_from_actor(actor):
+    # Retrieve the filename associated with this actor
+    return actor_to_filename.get(actor, None)
 
-    return np.dot(Rx, Ry)
+class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
 
+    def __init__(self, parent=None):
+        self.AddObserver("LeftButtonPressEvent", self.leftButtonPressEvent)
+        self.AddObserver("MouseMoveEvent", self.mouseMoveEvent)
+        self.selectedActor = None
+        self.transform = vtk.vtkTransform()
 
-def project3d_to_2d( vertex ):
+    def leftButtonPressEvent(self, obj, event):
+        clickPos = self.GetInteractor().GetEventPosition()
 
-    scale = 25
-    vertex = vertex * scale
+        picker = vtk.vtkPropPicker()
+        picker.Pick(clickPos[0], clickPos[1], 0, self.GetDefaultRenderer())
 
-    x, y, z = vertex
+        # Get the new actor
+        self.selectedActor = picker.GetActor()
+        print(get_stl_file_from_actor(self.selectedActor))
 
-    r = pygame.math.Vector2(
-        x - y + 350,
-        x + y - z + 350
-    )
+        # Forward events
+        self.OnLeftButtonDown()
+        return
 
-    return r
+    def mouseMoveEvent(self, obj, event):
+        if self.selectedActor:
+            mousePos = self.GetInteractor().GetEventPosition()
+            # Implement the logic for how the mouse movement translates to actor transformation
+            # For example, simple translation:
+            self.transform.Translate(mousePos[0] * 0.01, mousePos[1] * 0.01, 0)
+            self.selectedActor.SetUserTransform(self.transform)
 
-
-def is_clockwise(points):
-    v = 0
-    for a, b in zip( points, points[1:] + [points[0]] ):
-        v += ( b[0] - a[0] ) * ( b[1] + a[1] )
-    return v > 0
-
-
-def surface_normal( surface ):
-
-    surface = np.array( surface )
-    n = np.array( ( 0.0,) * 3 )
-
-    for i, a in enumerate( surface ):
-        b = surface [ ( i + 1 ) % len( surface ), : ]
-        n[0] += ( a[1] - b[1] ) * ( a[2] + b[2] )
-        n[1] += ( a[2] - b[2] ) * ( a[0] + b[0] )
-        n[2] += ( a[0] - b[0] ) * ( a[1] + b[1] )
-
-    norm = np.linalg.norm(n)
-    if norm==0: raise ValueError('zero norm')
-    return n / norm
+        # Forward events
+        self.OnMouseMove()
+        return
 
 
-def lerp_color( factor, color_a, color_b ):
-    color_a = np.array(color_a)
-    color_b = np.array(color_b)
-    vector = color_b - color_a
-    r = color_a + vector * factor
-    return r
+def create_stl_actor(file_name, translation, rotation):
+    # Create a reader for a specific STL file
+    reader = vtk.vtkSTLReader()
+    reader.SetFileName(file_name)
+
+    # Create a mapper for the STL file
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputConnection(reader.GetOutputPort())
+
+    # Create an actor for the STL file
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+
+    # Create a transform and apply translation and rotation
+    transform = vtk.vtkTransform()
+    transform.Translate(translation)
+    transform.RotateWXYZ(rotation[0], rotation[1], rotation[2], rotation[3])  # Angle, x, y, z
+
+    actor.SetUserTransform(transform)
+    global actor_to_filename
+    actor_to_filename[actor] = file_name
+    return actor
 
 
-def sort(face):
-    vertex1 = ( face[0], face[1], face[2] )
-    vertex2 = ( face[3], face[4], face[5] )
-    vertex3 = ( face[6], face[7], face[8] )
+def main():
+    # STL files to display
+    stl_files = [
+        ("legTop.stl", (10, 0, 0), (45, 1, 0, 0)),            # Example: Translate by (10, 0, 0) and rotate 45 degrees around x-axis
+        ("legBottom.stl", (0, 20, 0), (30, 0, 1, 0)),      # Translate and rotate another file
+        ("bodyAssembly.stl", (0, 0, 30), (60, 0, 0, 1))    # And so on for each file
+    ]
 
-    m = (
-        ( vertex1[0] + vertex2[0] + vertex3[0] / 3 ),
-        ( vertex1[1] + vertex2[1] + vertex3[1] / 3 ),
-        ( vertex1[2] + vertex2[2] + vertex3[2] / 3 ),
-    )
+    # A renderer and render window
+    renderer = vtk.vtkRenderer()
+    renderWindow = vtk.vtkRenderWindow()
+    renderWindow.AddRenderer(renderer)
 
-    return m[0] + m[1] + m[2]*2
+    # An interactor
+    # An interactor
+    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+    renderWindowInteractor.SetRenderWindow(renderWindow)
 
+    # Set the custom interactor style
+    customStyle = MouseInteractorHighLightActor()
+    customStyle.SetDefaultRenderer(renderer)
+    renderWindowInteractor.SetInteractorStyle(customStyle)
 
-def rotate( mesh, rot, axis ):
-
-    for face in mesh:
-
-        vertex1 = pygame.math.Vector3( (face[0], face[1], face[2]) )
-        vertex2 = pygame.math.Vector3( (face[3], face[4], face[5]) )
-        vertex3 = pygame.math.Vector3( (face[6], face[7], face[8]) )
-
-        vertex1 = getattr( vertex1, 'rotate_{0}_rad'.format( axis ) )( rot )
-        vertex2 = getattr( vertex2, 'rotate_{0}_rad'.format( axis ) )( rot )
-        vertex3 = getattr( vertex3, 'rotate_{0}_rad'.format( axis ) )( rot )
-
-        yield ( vertex1[0], vertex1[1], vertex1[2],
-                vertex2[0], vertex2[1], vertex2[2],
-                vertex3[0], vertex3[1], vertex3[2], )
-
-def apply_transform(vectors, rotation_matrix):
-    # Ensure the vectors array is a numpy array
-    vectors = np.array(vectors)
-
-    # Convert to homogeneous coordinates (add a fourth component, w=1)
-    homogenous_vectors = np.ones((vectors.shape[0], vectors.shape[1], 4))
-    homogenous_vectors[:, :, :3] = vectors
-
-    # Apply the rotation to each vertex
-    rotated_vectors = np.dot(homogenous_vectors, rotation_matrix.T)
-
-    # Convert back to 3D coordinates
-    return rotated_vectors[:, :, :3]
+    # Add actors for each STL file to the scene
+    for file_name, translation, rotation in stl_files:
+        actor = create_stl_actor(file_name, translation, rotation)
+        renderer.AddActor(actor)
 
 
-def render( faces, z_rot, colors, ray ):
+    # Set the background color
+    renderer.SetBackground(1, 1, 1)
 
-    screen.fill( 0x112233 )
+    # Render and interact
+    renderWindow.Render()
+    renderWindowInteractor.Start()
 
-    #for face in sorted( rotate( faces, z_rot, 'z' ), key = sort ):
-    for face in sorted( faces, key = sort ):
-        vertex1 = ( face[0], face[1], face[2] )
-        vertex2 = ( face[3], face[4], face[5] )
-        vertex3 = ( face[6], face[7], face[8] )
-
-        polygon = [
-            project3d_to_2d( pygame.math.Vector3( vertex ) )
-            for vertex in [ vertex1, vertex2, vertex3 ]
-        ]
-
-        if is_clockwise( polygon ): continue
-
-        n = surface_normal( [ vertex1, vertex2, vertex3 ] )
-
-        pygame.draw.polygon(
-            surface = screen,
-            color = lerp_color( ( n.dot( ray ) + 1 ) / 2, *colors ),
-            points = polygon,
-        )
-
-    pygame.display.update()
-
-def scaling_matrix(scale_factor):
-    return np.array([
-        [scale_factor, 0, 0, 0],
-        [0, scale_factor, 0, 0],
-        [0, 0, scale_factor, 0],
-        [0, 0, 0, 1]
-    ])
-
-def translation_matrix(dx, dy, dz):
-    return np.array([
-        [1, 0, 0, dx],
-        [0, 1, 0, dy],
-        [0, 0, 1, dz],
-        [0, 0, 0, 1]
-    ])
-
-if __name__ == '__main__':
-    pygame.init()
-    screen = pygame.display.set_mode( ( 700, 700 ) )
-    clock = pygame.time.Clock()
-
-    #FPS = 60
-
-    # test change this value to rotate the teapot ( it is in radians )
-    z_rot = -1.1
-
-    # test change these color to modify colors on teapot.
-    # (one of the color is the shadow color)
-    color_a = ( 0,   0,  0 )
-    color_b = ( 200, 100, 0 )
-
-    # the shadow is based on this vector. test change it.
-    ray = pygame.math.Vector3( 0, -0.4, 0 ).normalize()
-
-    # you can download the teapot stl file at: https://en.wikipedia.org/wiki/STL_(file_format)
-    # remember to rename to to teapot.stl
-    #faces = mesh.Mesh.from_file( 'legTop.stl' )
-    faces = mesh.Mesh.from_file( 'ab.stl' )
-    # of course you can find other stl files to test but you might have to scale and
-    # offset the projection to get a good view of it. see project3d_to_2d.
-    last_pos = None
-    transform = np.identity(4)
-
-# Main loop
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 4:  # Scroll up
-                    faces.vectors = apply_transform(faces.vectors, scaling_matrix(1.1))
-                    #faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, 1.0))
-                elif event.button == 5:  # Scroll down
-                    faces.vectors = apply_transform(faces.vectors, scaling_matrix(0.9))
-                    #faces.vectors = apply_transform(faces.vectors, translation_matrix(0, 0, -1.0))
-            elif event.type == pygame.MOUSEMOTION:
-                if pygame.mouse.get_pressed()[0]:  # Left button - rotation
-                    if last_pos:
-                        dx, dy = event.rel
-                        dx = np.radians(dx * 0.1)
-                        dy = -np.radians(dy * 0.1)
-                        faces.vectors = apply_transform(faces.vectors, rotation_matrix(dx, dy))
-                    last_pos = event.pos
-                elif pygame.mouse.get_pressed()[2]:  # Right button - translation
-                    if last_pos:
-                        dx, dy = event.rel
-                        faces.vectors = apply_transform(faces.vectors, translation_matrix(dx * 0.01, -dx * 0.01, -dy*0.1))
-                    last_pos = event.pos
-                else:
-                    last_pos = None
-        render( faces, z_rot = z_rot, colors = ( color_a, color_b ), ray = ray )
-
-    # NOTE: you can also write your own projection.
-    #       implement it in project3d_to_2d (you might have to modify sort method after that)
-
-    pygame.quit()
+if __name__ == "__main__":
+    main()
