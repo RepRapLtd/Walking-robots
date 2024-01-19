@@ -11,20 +11,49 @@
 #
 
 import vtk
+import numpy as np
+from scipy.spatial.transform import Rotation as R
 
-actor_to_filename = {}  # Global dictionary to map actors to filenames
+bodies = []
 
-def get_stl_file_from_actor(actor):
-    # Retrieve the filename associated with this actor
-    return actor_to_filename.get(actor, None)
+def getBodyFromActor(actor):
+    global bodies
+    for body in bodies:
+        if body.actor == actor:
+            return body
+    return None
+
+def get_rotation_components(vtk_transform):
+    # Extract the 4x4 matrix from the vtkTransform
+    vtk_matrix = vtk_transform.GetMatrix()
+
+    # Manually convert the VTK matrix to a NumPy array
+    matrix_np = np.zeros((4, 4))
+    for i in range(4):
+        for j in range(4):
+            matrix_np[i, j] = vtk_matrix.GetElement(i, j)
+
+    # Extract the rotation part of the matrix
+    rotation_matrix_np = matrix_np[:3, :3]
+
+    # Convert rotation matrix to a quaternion using scipy
+    rotation = R.from_matrix(rotation_matrix_np)
+    quaternion = rotation.as_quat()  # Returns (x, y, z, w)
+
+    # Reorder quaternion to (w, x, y, z)
+    w, x, y, z = quaternion[3], quaternion[0], quaternion[1], quaternion[2]
+
+    return w, x, y, z
+
+
 
 class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
 
     def __init__(self, parent=None):
         self.AddObserver("LeftButtonPressEvent", self.leftButtonPressEvent)
+        self.AddObserver("LeftButtonUpEvent", self.leftButtonUpEvent)
         self.AddObserver("MouseMoveEvent", self.mouseMoveEvent)
-        self.selectedActor = None
-        self.transform = vtk.vtkTransform()
+        self.body = None
 
     def leftButtonPressEvent(self, obj, event):
         clickPos = self.GetInteractor().GetEventPosition()
@@ -33,56 +62,106 @@ class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
         picker.Pick(clickPos[0], clickPos[1], 0, self.GetDefaultRenderer())
 
         # Get the new actor
-        self.selectedActor = picker.GetActor()
-        print(get_stl_file_from_actor(self.selectedActor))
+        self.body = getBodyFromActor(picker.GetActor())
+        if self.body != None:
+            print(self.body.name)
+        else:
+            print("None")
 
         # Forward events
         self.OnLeftButtonDown()
         return
 
+    def leftButtonUpEvent(self, obj, event):
+        self.body = None
+        self.OnLeftButtonUp()
+        return
+
     def mouseMoveEvent(self, obj, event):
-        if self.selectedActor:
+        if self.body:
             mousePos = self.GetInteractor().GetEventPosition()
             # Implement the logic for how the mouse movement translates to actor transformation
             # For example, simple translation:
-            self.transform.Translate(mousePos[0] * 0.01, mousePos[1] * 0.01, 0)
-            self.selectedActor.SetUserTransform(self.transform)
+            self.body.rotate([mousePos[0] * 0.01, 1, 0, 0])
+            self.body.actor.SetUserTransform(self.body.transform)
 
         # Forward events
         self.OnMouseMove()
         return
 
+class Body:
+    def __init__(self, name):
+        self.name = name
+        self.translation = [0,0,0]
+        self.rotation = [0,1,0,0]
+        self.transform = vtk.vtkTransform()
 
-def create_stl_actor(file_name, translation, rotation):
-    # Create a reader for a specific STL file
-    reader = vtk.vtkSTLReader()
-    reader.SetFileName(file_name)
+        # Create a reader for a specific STL file
+        reader = vtk.vtkSTLReader()
+        reader.SetFileName(self.name)
 
-    # Create a mapper for the STL file
+        # Create a mapper for the STL file
+        self.mapper = vtk.vtkPolyDataMapper()
+        self.mapper.SetInputConnection(reader.GetOutputPort())
+
+        # Create an actor for the STL file
+        self.actor = vtk.vtkActor()
+        self.actor.SetMapper(self.mapper)
+
+        # Create a transform and apply translation and rotation
+        self.transform = vtk.vtkTransform()
+        self.applyTransform()
+
+
+    def applyTransform(self):
+        self.transform.RotateWXYZ(self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3])  # Angle, x, y, z
+        self.transform.Translate(self.translation)
+        self.actor.SetUserTransform(self.transform)
+
+
+    def translate(self, translation):
+        for i in range(3):
+            self.translation[i] = self.translation[i] + translation[i]
+        self.applyTransform()
+
+    def rotate(self, rotation):
+        oldTranslation = [self.translation[0], self.translation[1], self.translation[2]]
+        self.translate([-self.translation[0], -self.translation[1], -self.translation[2]])
+        newRotation = vtk.vtkTransform()
+        newRotation.RotateWXYZ(rotation[0], rotation[1], rotation[2], rotation[3])
+        t3 = vtk.vtkTransform()
+        t3.PostMultiply()
+        t3.Concatenate(newRotation)
+        t3.Concatenate(self.transform)
+        self.transfom = t3
+        self.rotation = get_rotation_components(t3)
+        self.translate(oldTranslation)
+
+
+
+# Function to create an axis line (origin to unit vector point)
+def create_axis_line(renderer, axis_color, point2):
+    lineSource = vtk.vtkLineSource()
+    lineSource.SetPoint1(0, 0, 0)
+    lineSource.SetPoint2(point2)
+
     mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputConnection(reader.GetOutputPort())
+    mapper.SetInputConnection(lineSource.GetOutputPort())
 
-    # Create an actor for the STL file
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
+    actor.GetProperty().SetColor(axis_color)
 
-    # Create a transform and apply translation and rotation
-    transform = vtk.vtkTransform()
-    transform.Translate(translation)
-    transform.RotateWXYZ(rotation[0], rotation[1], rotation[2], rotation[3])  # Angle, x, y, z
-
-    actor.SetUserTransform(transform)
-    global actor_to_filename
-    actor_to_filename[actor] = file_name
-    return actor
+    renderer.AddActor(actor)
 
 
 def main():
+    global bodies
     # STL files to display
-    stl_files = [
-        ("legTop.stl", (10, 0, 0), (45, 1, 0, 0)),            # Example: Translate by (10, 0, 0) and rotate 45 degrees around x-axis
-        ("legBottom.stl", (0, 20, 0), (30, 0, 1, 0)),      # Translate and rotate another file
-        ("bodyAssembly.stl", (0, 0, 30), (60, 0, 0, 1))    # And so on for each file
+    names = [
+        "legTop.stl",         # Example: Translate by (10, 0, 0) and rotate 45 degrees around x-axis
+        "legBottom.stl",      # Translate and rotate another file
+        "bodyAssembly.stl"   # And so on for each file
     ]
 
     # A renderer and render window
@@ -100,14 +179,21 @@ def main():
     customStyle.SetDefaultRenderer(renderer)
     renderWindowInteractor.SetInteractorStyle(customStyle)
 
+
+    create_axis_line(renderer, (1, 0, 0), (50, 0, 0))  # Red for X
+    create_axis_line(renderer, (0, 1, 0), (0, 50, 0))  # Green for Y
+    create_axis_line(renderer, (0, 0, 1), (0, 0, 50))  # Blue for Z
+
     # Add actors for each STL file to the scene
-    for file_name, translation, rotation in stl_files:
-        actor = create_stl_actor(file_name, translation, rotation)
-        renderer.AddActor(actor)
+
+    for name in names:
+        body = Body(name)
+        bodies.append(body)
+        renderer.AddActor(body.actor)
 
 
     # Set the background color
-    renderer.SetBackground(1, 1, 1)
+    renderer.SetBackground(0.1, 0.1, 0.1)
 
     # Render and interact
     renderWindow.Render()
