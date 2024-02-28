@@ -119,5 +119,37 @@ In /etc/rc.local:
 sudo python3 /home/pi/Walking-robots/Petoi/Software/Pi/Experiments/OLED_Module_Code/RaspberryPi/python/example/display-ip.py > /dev/null &
 
 
+Running the web-based interactive control
+=========================================
+
+Note that /var/www/html/Petoi is a symlink to ...../Walking-robots/Petoi/Software/Pi/www
+
+Running the simulator:
+----------------------
+
+In .../Walking-robots/Petoi/Software/Pi/www
+
+$ python3 petoi-server.py s
+
+Then in a browser go to
+
+http://localhost/Petoi/
+
+Running the actual robot:
+-------------------------
+
+$ ssh pi@[I.P. on OLED display]
+$ cd /var/www/html/Petoi
+$ python3 petoi-server.py
+
+Then in a browser go to 
+
+http://[I.P. on OLED display]/Petoi/
+
+
+
+
+
+
 
 
