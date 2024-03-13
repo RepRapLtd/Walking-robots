@@ -55,6 +55,13 @@ import time
 import math as maths
 import socketserver
 
+import io
+import picamera
+import logging
+from threading import Condition
+from http import server
+
+
 if len(sys.argv) == 1:
  import rrlpetoi as rrlp
 elif sys.argv[1] == "s":
@@ -73,6 +80,71 @@ if debug:
  print("Robot initialised")
 
 
+#---------------------------------------------------------------------------------
+
+# Handle the camera
+ 
+class StreamingOutput(object):
+    def __init__(self):
+        self.frame = None
+        self.buffer = io.BytesIO()
+        self.condition = Condition()
+
+    def write(self, buf):
+        if buf.startswith(b'\xff\xd8'):
+            # New frame, copy the existing buffer's content and notify all
+            # clients it's available
+            self.buffer.truncate()
+            with self.condition:
+                self.frame = self.buffer.getvalue()
+                self.condition.notify_all()
+            self.buffer.seek(0)
+        return self.buffer.write(buf)
+
+class StreamingHandler(server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(301)
+            self.send_header('Location', '/index.html')
+            self.end_headers()
+        elif self.path == '/index.html':
+            content = PAGE.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
+        elif self.path == '/stream.mjpg':
+            self.send_response(200)
+            self.send_header('Age', 0)
+            self.send_header('Cache-Control', 'no-cache, private')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+            self.end_headers()
+            try:
+                while True:
+                    with output.condition:
+                        output.condition.wait()
+                        frame = output.frame
+                    self.wfile.write(b'--FRAME\r\n')
+                    self.send_header('Content-Type', 'image/jpeg')
+                    self.send_header('Content-Length', len(frame))
+                    self.end_headers()
+                    self.wfile.write(frame)
+                    self.wfile.write(b'\r\n')
+            except Exception as e:
+                logging.warning(
+                    'Removed streaming client %s: %s',
+                    self.client_address, str(e))
+        else:
+            self.send_error(404)
+            self.end_headers()
+
+class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+#--------------------------------------------------------------------------------------
 
 def GetLegNames():
  reply = ""
@@ -224,6 +296,9 @@ def Interpret(command):
   print("Dud command: " + command)
  
  return reply
+ 
+def run_server(server):
+ server.serve_forever()
 
 
 
@@ -248,12 +323,28 @@ if __name__ == "__main__":
 
  #me = singleton.SingleInstance() # will sys.exit(-1) if other instance is running
 
+ # Create the robot server, binding to localhost on port 9999
  HOST, PORT = "localhost", 9999
+ robotServer = socketserver.TCPServer((HOST, PORT), TCPHandler)
+ 
+ # Create the camera server binding to localhost on port 8000
+ camera = picamera.PiCamera(resolution='640x480', framerate=24)
+ output = StreamingOutput()
+ #Uncomment the next line to change the Pi's Camera rotation (in degrees)
+ #camera.rotation = 90
+ camera.start_recording(output, format='mjpeg')
+ address = ('', 8000)
+ CameraServer = StreamingServer(address, StreamingHandler)
+ 
+ robotThread = threading.Thread(target=run_server, args=(RobotServer,))
+ cameraThread = threading.Thread(target=run_server, args=(CameraServer,))
+ 
+ if debug:  
+  print("Starting robot server thread.")  
+ robotThread.start()
+ 
+ if debug:  
+  print("Starting camera server thread.")  
+ cameraThread.start()
 
- # Create the server, binding to localhost on port 9999
- with socketserver.TCPServer((HOST, PORT), TCPHandler) as server:
-  # Activate the server; this will keep running until you
-  # interrupt the program with Ctrl-C or send "Exit"
-  if debug:  
-   print("Starting server.")
-  server.serve_forever()
+
