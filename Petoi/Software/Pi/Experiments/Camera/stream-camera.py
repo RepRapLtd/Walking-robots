@@ -98,3 +98,32 @@ with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
         server.serve_forever()
     finally:
         camera.stop_recording()
+        
+# Run 2 threads (from GPT4):
+'''
+import threading
+from your_server_module import StreamingServer, StreamingHandler1, StreamingHandler2  # Adjust import as necessary
+
+address1 = ('localhost', 8080)  # Adjust as necessary
+address2 = ('localhost', 8081)  # Adjust as necessary
+
+server1 = StreamingServer(address1, StreamingHandler1)
+server2 = StreamingServer(address2, StreamingHandler2)
+
+# Define a function to run a server
+def run_server(server):
+    server.serve_forever()
+
+# Create threads for each server
+thread1 = threading.Thread(target=run_server, args=(server1,))
+thread2 = threading.Thread(target=run_server, args=(server2,))
+
+# Start the threads
+thread1.start()
+thread2.start()
+
+# Optionally join the threads to wait for them to finish (they won't, in this case, since they serve forever)
+# thread1.join()
+# thread2.join()
+
+'''
