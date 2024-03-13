@@ -60,7 +60,7 @@ import picamera
 import logging
 from threading import Condition
 from http import server
-
+import threading
 
 if len(sys.argv) == 1:
  import rrlpetoi as rrlp
@@ -326,7 +326,7 @@ if __name__ == "__main__":
  # Create the robot server, binding to localhost on port 9999
  HOST, PORT = "localhost", 9999
  with socketserver.TCPServer((HOST, PORT), TCPHandler) as robotServer:
-  robotThread = threading.Thread(target=run_server, args=(RobotServer,))
+  robotThread = threading.Thread(target=run_server, args=(robotServer,))
  
  # Create the camera server binding to localhost on port 8000
  with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
