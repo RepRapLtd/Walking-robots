@@ -541,7 +541,8 @@ y:
 
 <H2>Camera</H2>
 
-<img src="testpic.jpg" alt="robot camera image" width="500">
+
+<center><img src="stream.mjpg" width="640" height="480"></center>
 
 <table>
   <tr align="left">
