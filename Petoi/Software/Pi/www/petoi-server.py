@@ -325,20 +325,19 @@ if __name__ == "__main__":
 
  # Create the robot server, binding to localhost on port 9999
  HOST, PORT = "localhost", 9999
- robotServer = socketserver.TCPServer((HOST, PORT), TCPHandler)
+ with socketserver.TCPServer((HOST, PORT), TCPHandler) as robotServer:
+  robotThread = threading.Thread(target=run_server, args=(RobotServer,))
  
  # Create the camera server binding to localhost on port 8000
- camera = picamera.PiCamera(resolution='640x480', framerate=24)
- output = StreamingOutput()
- #Uncomment the next line to change the Pi's Camera rotation (in degrees)
- #camera.rotation = 90
- camera.start_recording(output, format='mjpeg')
- address = ('', 8000)
- CameraServer = StreamingServer(address, StreamingHandler)
- 
- robotThread = threading.Thread(target=run_server, args=(RobotServer,))
- cameraThread = threading.Thread(target=run_server, args=(CameraServer,))
- 
+ with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
+  output = StreamingOutput()
+  #Uncomment the next line to change the Pi's Camera rotation (in degrees)
+  #camera.rotation = 90
+  camera.start_recording(output, format='mjpeg')
+  address = ('', 8000)
+  CameraServer = StreamingServer(address, StreamingHandler)
+  cameraThread = threading.Thread(target=run_server, args=(CameraServer,))
+  
  if debug:  
   print("Starting robot server thread.")  
  robotThread.start()
