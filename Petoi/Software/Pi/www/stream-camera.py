@@ -20,7 +20,8 @@ def read_file_as_string(filename):
         return file.read()  # Read and return the file's contents as a string
 
 
-PAGE=read_file_as_string(index.php)
+PAGE=read_file_as_string('index.php')
+CSS=read_file_as_string('styles.css')
 
 class StreamingOutput(object):
     def __init__(self):
@@ -47,6 +48,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
         elif self.path == '/index.html':
             content = PAGE.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
+        elif self.path == '/styles.css':
+            content = CSS.encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.send_header('Content-Length', len(content))
