@@ -55,12 +55,12 @@ import time
 import math as maths
 import socketserver
 
-import io
-import picamera
-import logging
-from threading import Condition
-from http import server
-import threading
+#import io
+#import picamera
+#import logging
+#from threading import Condition
+#from http import server
+
 
 if len(sys.argv) == 1:
  import rrlpetoi as rrlp
@@ -297,8 +297,6 @@ def Interpret(command):
  
  return reply
  
-def run_server(server):
- server.serve_forever()
 
 
 
@@ -326,24 +324,8 @@ if __name__ == "__main__":
  # Create the robot server, binding to localhost on port 9999
  HOST, PORT = "localhost", 9999
  with socketserver.TCPServer((HOST, PORT), TCPHandler) as robotServer:
-  robotThread = threading.Thread(target=run_server, args=(robotServer,))
- 
- # Create the camera server binding to localhost on port 8000
- with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
-  output = StreamingOutput()
-  #Uncomment the next line to change the Pi's Camera rotation (in degrees)
-  #camera.rotation = 90
-  camera.start_recording(output, format='mjpeg')
-  address = ('', 8000)
-  CameraServer = StreamingServer(address, StreamingHandler)
-  cameraThread = threading.Thread(target=run_server, args=(CameraServer,))
-  
- if debug:  
-  print("Starting robot server thread.")  
- robotThread.start()
- 
- if debug:  
-  print("Starting camera server thread.")  
- cameraThread.start()
+  if debug:
+   print('Starting robot server')
+  robotServer.serve_forever()
 
 
