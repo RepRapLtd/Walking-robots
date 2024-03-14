@@ -312,11 +312,13 @@ class Accelerometer:
 class Camera:
 
  def  __init__(self):
+  pass
   #self.camera = PiCamera()
   #self.camera.start_preview()
   #time.sleep(2)
   
  def Snap(self):
+  pass
   #stream = BytesIO()
   #self.camera.capture(stream, format='jpeg')
   #stream.seek(0)
@@ -324,9 +326,11 @@ class Camera:
   #return self.image
   
  def SnapToFile(self, name):
+  pass
   #self.camera.capture(name)
 
  def Shutdown(self):
+  pass
   #self.camera.stop_preview()
 
 ##########################################################################################
