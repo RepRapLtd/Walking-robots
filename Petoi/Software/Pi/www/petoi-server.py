@@ -55,12 +55,6 @@ import time
 import math as maths
 import socketserver
 
-#import io
-#import picamera
-#import logging
-#from threading import Condition
-#from http import server
-
 
 if len(sys.argv) == 1:
  import rrlpetoi as rrlp

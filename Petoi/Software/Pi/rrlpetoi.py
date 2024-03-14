@@ -45,7 +45,7 @@ import smbus
 import VL53L0X
 import board
 import adafruit_mpu6050
-from picamera import PiCamera
+#from picamera import PiCamera
 from io import BytesIO
 from PIL import Image
 
@@ -312,22 +312,22 @@ class Accelerometer:
 class Camera:
 
  def  __init__(self):
-  self.camera = PiCamera()
-  self.camera.start_preview()
-  time.sleep(2)
+  #self.camera = PiCamera()
+  #self.camera.start_preview()
+  #time.sleep(2)
   
  def Snap(self):
-  stream = BytesIO()
-  self.camera.capture(stream, format='jpeg')
-  stream.seek(0)
-  self.image = Image.open(stream)
-  return self.image
+  #stream = BytesIO()
+  #self.camera.capture(stream, format='jpeg')
+  #stream.seek(0)
+  #self.image = Image.open(stream)
+  #return self.image
   
  def SnapToFile(self, name):
-  self.camera.capture(name)
+  #self.camera.capture(name)
 
  def Shutdown(self):
-  self.camera.stop_preview()
+  #self.camera.stop_preview()
 
 ##########################################################################################
 #
