@@ -14,13 +14,24 @@ import logging
 import socketserver
 from threading import Condition
 from http import server
+import subprocess
 
 def read_file_as_string(filename):
     with open(filename, 'r', encoding='utf-8') as file:  # Open the file
         return file.read()  # Read and return the file's contents as a string
+        
+def execute_php_file(file_path):
+    # Command to execute the PHP file using the PHP CLI
+    command = ['php', file_path]
+    
+    # Execute the command and capture the output
+    result = subprocess.run(command, capture_output=True, text=True)
+    
+    # Return the standard output from the PHP script
+    return result.stdout
 
 
-PAGE=read_file_as_string('index.php')
+#PAGE=read_file_as_string('index.php')
 CSS=read_file_as_string('styles.css')
 
 class StreamingOutput(object):
@@ -47,7 +58,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Location', '/index.html')
             self.end_headers()
         elif self.path == '/index.html':
-            content = PAGE.encode('utf-8')
+            content = execute_php_file(index.php).encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.send_header('Content-Length', len(content))
