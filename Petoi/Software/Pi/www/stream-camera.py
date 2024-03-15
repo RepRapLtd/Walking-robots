@@ -64,6 +64,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Content-Length', len(content))
             self.end_headers()
             self.wfile.write(content)
+        elif self.path.startswith('/send-command-get-reply.php'):
+            content = execute_php_file(self.path).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
         elif self.path == '/styles.css':
             content = CSS.encode('utf-8')
             self.send_response(200)
