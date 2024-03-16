@@ -1,3 +1,22 @@
+# 
+# Raspberry Pi Camera server
+#
+# Written by GPT4
+# Licence: GPL
+#
+# Adrian Bowyer
+# RepRap Lyd
+# https://reprapltd.com
+#
+# Run this with
+# 
+# $ python3 camera-server.py &
+#
+# The camera stream can then be embedded in a web page with
+#
+# <img src="http://[Pi's IP address]:8000/stream.mjpg" width="640" height="480">
+#
+
 from flask import Flask, Response
 import picamera
 import io

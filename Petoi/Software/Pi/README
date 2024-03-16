@@ -139,13 +139,13 @@ Running the actual robot:
 -------------------------
 
 $ ssh pi@[I.P. on OLED display]
-$ cd Walking-robots/Petoi/Software/Pi/www
-$ python3 petoi-server.py &
-$ python3 stream-camera.py
+$ cd /var/www/html/Petoi
+$ python3 camera-server.py &
+$ python3 petoi-server.py
 
 Then in a browser go to 
 
-http://[I.P. on OLED display]:8000/index.html
+http://[I.P. on OLED display]/Petoi
 
 
 
