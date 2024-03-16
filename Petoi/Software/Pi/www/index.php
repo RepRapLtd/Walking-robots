@@ -542,7 +542,7 @@ y:
 <H2>Camera</H2>
 
 
-<center><img src="stream.mjpg" width="640" height="480"></center>
+<center><img src="http://192.168.68.153:8000/stream.mjpg" width="640" height="480"></center>
 
 <table>
   <tr align="left">
