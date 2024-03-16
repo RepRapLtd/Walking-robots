@@ -32,8 +32,7 @@ def execute_php_file(file_path):
     return result.stdout
 
 
-#PAGE=read_file_as_string('index.php')
-CSS=read_file_as_string('styles.css')
+css = read_file_as_string('styles.css')
 
 class StreamingOutput(object):
     def __init__(self):
@@ -53,7 +52,13 @@ class StreamingOutput(object):
         return self.buffer.write(buf)
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
-    def run_thread(self):
+    def streaming_thread(self):
+      self.send_response(200)
+      self.send_header('Age', 0)
+      self.send_header('Cache-Control', 'no-cache, private')
+      self.send_header('Pragma', 'no-cache')
+      self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+      self.end_headers()
       try:
         while True:
           with output.condition:
@@ -73,9 +78,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
             self.send_response(301)
-            self.send_header('Location', '/index.html')
+            self.send_header('Location', '/index.php')
             self.end_headers()
-        elif self.path == '/index.html':
+        elif self.path == '/index.php':
             content = execute_php_file('index.php').encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
@@ -90,20 +95,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
         elif self.path == '/styles.css':
-            content = CSS.encode('utf-8')
+            content = css.encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.send_header('Content-Length', len(content))
             self.end_headers()
             self.wfile.write(content)
         elif self.path == '/stream.mjpg':
-            self.send_response(200)
-            self.send_header('Age', 0)
-            self.send_header('Cache-Control', 'no-cache, private')
-            self.send_header('Pragma', 'no-cache')
-            self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
-            self.end_headers()
-            self.thread = threading.Thread(target=self.run_thread)
+            self.thread = threading.Thread(target=self.streaming_thread)
             self.thread.start()
             print('Camera thread started')
         else:
