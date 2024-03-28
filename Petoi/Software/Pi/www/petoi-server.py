@@ -314,26 +314,27 @@ class TCPHandler(socketserver.StreamRequestHandler):
    print("sent: "+reply)
   self.wfile.write(bytes(reply + "\n", encoding))
 
-# Launch the two servers
-
-if __name__ == '__main__':
-
-# Camera
-
-    ip_address = get_ip_address()
-    generate_php_script(ip_address)
-    if debug:
-      print('Starting camera server')
-    cameraThread = threading.Thread(target=runCameraServer)
-    cameraThread.start()
-
-# Robot
-
- # Create the robot server, binding to localhost on port 9999
+def runRobotServer():
  HOST, PORT = "localhost", 9999
  with socketserver.TCPServer((HOST, PORT), TCPHandler) as robotServer:
   if debug:
    print('Starting robot server')
   robotServer.serve_forever()
+
+# Launch the two servers
+
+if __name__ == '__main__':
+
+ robotThread = threading.Thread(target=runRobotServer)
+ robotThread.start()
+
+# Camera
+
+ ip_address = get_ip_address()
+ generate_php_script(ip_address)
+ if debug:
+   print('Starting camera server')
+ runCameraServer()
+
 
 
