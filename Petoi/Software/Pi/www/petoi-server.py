@@ -330,7 +330,7 @@ def runCameraServer():
   generate_php_script(ip_address)
   if debug:
    print('Starting camera server')
-  app.run(host='0.0.0.0', port=8000, debug=True, threaded=True)
+  app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False, threaded=True)
  print("Camera server is stopping...")
 
 
