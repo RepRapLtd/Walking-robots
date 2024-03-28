@@ -79,6 +79,11 @@ else:
  sys.exit(1)
 
 
+# Spot when we go home
+
+stop_event = threading.Event()
+
+
 # Set up the robot
 
 encoding = "utf-8"
@@ -134,9 +139,6 @@ def generate_camera_stream():
 def stream_mjpg():
     return Response(generate_camera_stream(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
-
-def runCameraServer():
-  app.run(host='0.0.0.0', port=8000, debug=True, threaded=True)
 
 
 #########################################################################################
@@ -296,7 +298,6 @@ def Interpret(command):
  
 
 
-
 class TCPHandler(socketserver.StreamRequestHandler):
 
  def handle(self):
@@ -315,26 +316,49 @@ class TCPHandler(socketserver.StreamRequestHandler):
   self.wfile.write(bytes(reply + "\n", encoding))
 
 def runRobotServer():
- HOST, PORT = "localhost", 9999
- with socketserver.TCPServer((HOST, PORT), TCPHandler) as robotServer:
+ while not stop_event.is_set():
+  HOST, PORT = "localhost", 9999
+  with socketserver.TCPServer((HOST, PORT), TCPHandler) as robotServer:
+   if debug:
+    print('Starting robot server')
+   robotServer.serve_forever()
+ print("Robot server is stopping...")
+  
+def runCameraServer():
+ while not stop_event.is_set():
+  ip_address = get_ip_address()
+  generate_php_script(ip_address)
   if debug:
-   print('Starting robot server')
-  robotServer.serve_forever()
+   print('Starting camera server')
+  app.run(host='0.0.0.0', port=8000, debug=True, threaded=True)
+ print("Camera server is stopping...")
+
 
 # Launch the two servers
 
 if __name__ == '__main__':
 
- robotThread = threading.Thread(target=runRobotServer)
- robotThread.start()
+    try:
+        robotThread = threading.Thread(target=runRobotServer)
+        cameraThread = threading.Thread(target=runCameraServer)
+        robotThread.start()
+        cameraThread.start()
 
-# Camera
+        # Keep the main thread running, or it won't catch KeyboardInterrupt
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("Attempting to exit gracefully...")
+        # Signal the threads to stop
+        stop_event.set()
 
- ip_address = get_ip_address()
- generate_php_script(ip_address)
- if debug:
-   print('Starting camera server')
- runCameraServer()
+        # Wait for the threads to finish
+        robotThread.join()
+        cameraThread.join()
+
+        print("Shutdown complete.")
+
+
 
 
 
