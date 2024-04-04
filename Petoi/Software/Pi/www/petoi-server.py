@@ -61,7 +61,6 @@ import sys
 import time
 import math as maths
 from flask import Flask, Response
-import picamera
 import io
 from time import sleep
 import socket
@@ -72,8 +71,11 @@ import threading
 
 if len(sys.argv) == 1:
  import rrlpetoi as rrlp
+ import picamera
+ simulation = False
 elif sys.argv[1] == "s":
  import rrlpetoisim as rrlp
+ simulation = True
 else:
  print("Invalid argument: " + sys.argv[1])
  sys.exit(1)
@@ -94,11 +96,12 @@ if debug:
  
 #########################################################################################
 
+if simulation:
 # The camera server
 
-app = Flask(__name__)
+ app = Flask(__name__)
 
-def get_ip_address():
+ def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         # Doesn't need to be reachable
@@ -110,16 +113,16 @@ def get_ip_address():
         s.close()
     return IP
 
-def generate_php_script(ip_address):
+ def generate_php_script(ip_address):
     php_content = f"""<?php
-// Auto-generated IP address for camera stream
-$camera_ip = "{ip_address}";
-?>
-"""
+ // Auto-generated IP address for camera stream
+ $camera_ip = "{ip_address}";
+ ?>
+ """
     with open("camera_ip.php", "w") as php_file:
         php_file.write(php_content)
 
-def generate_camera_stream():
+ def generate_camera_stream():
     with picamera.PiCamera() as camera:
         # Camera warm-up time
         sleep(2)
@@ -135,8 +138,8 @@ def generate_camera_stream():
             stream.seek(0)
             stream.truncate()
 
-@app.route('/stream.mjpg')
-def stream_mjpg():
+ @app.route('/stream.mjpg')
+ def stream_mjpg():
     return Response(generate_camera_stream(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -323,15 +326,16 @@ def runRobotServer():
     print('Starting robot server')
    robotServer.serve_forever()
  print("Robot server is stopping...")
-  
-def runCameraServer():
- while not stop_event.is_set():
-  ip_address = get_ip_address()
-  generate_php_script(ip_address)
-  if debug:
-   print('Starting camera server')
-  app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False, threaded=True)
- print("Camera server is stopping...")
+
+if not simulation:
+ def runCameraServer():
+  while not stop_event.is_set():
+   ip_address = get_ip_address()
+   generate_php_script(ip_address)
+   if debug:
+    print('Starting camera server')
+   app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False, threaded=True)
+  print("Camera server is stopping...")
 
 
 # Launch the two servers
@@ -340,9 +344,11 @@ if __name__ == '__main__':
 
     try:
         robotThread = threading.Thread(target=runRobotServer)
-        cameraThread = threading.Thread(target=runCameraServer)
+        if not simulation:
+         cameraThread = threading.Thread(target=runCameraServer)
         robotThread.start()
-        cameraThread.start()
+        if not simulation:
+         cameraThread.start()
 
         # Keep the main thread running, or it won't catch KeyboardInterrupt
         while True:
@@ -354,7 +360,8 @@ if __name__ == '__main__':
 
         # Wait for the threads to finish
         robotThread.join()
-        cameraThread.join()
+        if not simulation:
+         cameraThread.join()
 
         print("Shutdown complete.")
 

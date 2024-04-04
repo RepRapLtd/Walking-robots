@@ -55,3 +55,18 @@ h2 {
 body {
   font-size: 16px;
 }
+
+#canvas {
+            background-color: #f0f0f0;
+        }
+        
+table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+th, td {
+            padding: 5px;
+        }
+        

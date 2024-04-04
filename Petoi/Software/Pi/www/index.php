@@ -294,6 +294,7 @@ function AtStart($s, $l)
 	GetVoltages();
 	GetAccelerometer();
 	GetRange();
+	setUpCanvas();
 }
 
 /* Refresh Accelerometer */
@@ -359,6 +360,154 @@ function GetAccelerometer()
   });
 }
 
+/*******************************************************************************************/
+
+// Leg row design
+
+
+    function addVertex(x, y) {
+        // Add a default speed value for each vertex, you can adjust the default value as needed
+        vertices.push({x, y, speed: ''}); // Initialize speed as an empty string or a default value
+        draw();
+        updateTable();
+    }
+    
+    function undoVertex() {
+        vertices.pop();
+        draw();
+        updateTable();
+    }
+
+   // Adjust the saveVertices function to include speed
+    function saveVertices() {
+        // Now vertices include speed, which you can process or save
+        console.log('Saving polygon with vertices and speeds:', vertices);
+        // Call your JS function here with vertices
+    }
+
+    function drawGridLines() {
+        ctx.beginPath();
+        ctx.strokeStyle = '#e0e0e0';
+        // Draw vertical lines
+        for (let x = 0; x <= gridWidth; x += 10) {
+            ctx.moveTo(offsetX + x * cellSize, offsetY);
+            ctx.lineTo(offsetX + x * cellSize, canvasHeight);
+        }
+        // Draw horizontal lines
+        for (let y = 0; y <= gridHeight; y += 10) {
+            ctx.moveTo(offsetX, offsetY + y * cellSize);
+            ctx.lineTo(offsetX + gridWidth * cellSize, offsetY + y * cellSize);
+        }
+        ctx.stroke();
+    }
+
+    function drawAxisNumbers() {
+        ctx.fillStyle = 'black';
+        // Draw X-axis numbers along the bottom
+        for (let x = 0; x <= gridWidth; x += 10) {
+            ctx.fillText(x, offsetX + x * cellSize - 3, canvas.height - 5); // Adjust for the bottom
+        }
+        // Draw Y-axis numbers (right-handed system)
+        for (let y = 0; y <= gridHeight; y += 10) {
+            ctx.fillText(gridHeight - y, 5, offsetY + y * cellSize + 3);
+        }
+    }
+
+    function drawLines() {
+        ctx.strokeStyle = 'black';
+        if (vertices.length > 0) {
+            ctx.beginPath();
+            ctx.moveTo(offsetX + vertices[0].x * cellSize, offsetY + (gridHeight - vertices[0].y) * cellSize);
+            vertices.forEach(vertex => {
+                ctx.lineTo(offsetX + vertex.x * cellSize, offsetY + (gridHeight - vertex.y) * cellSize);
+            });
+            ctx.stroke();
+        }
+    }
+
+    function drawVertices() {
+        vertices.forEach(vertex => {
+            ctx.fillRect(offsetX + vertex.x * cellSize - 2, offsetY + (gridHeight - vertex.y) * cellSize - 2, 4, 4);
+        });
+    }
+    
+    function canvasClick(event) {
+    	rect = canvas.getBoundingClientRect();
+    	x = event.clientX - rect.left - offsetX;
+    	// Adjust the Y-coordinate calculation to round to the nearest grid line
+    	y = event.clientY - rect.top - offsetY;
+    	gridX = Math.floor(x / cellSize);
+    	// Update to round to the nearest grid line for Y
+    	gridY = gridHeight - Math.round(y / cellSize);
+    	if (gridX >= 0 && gridX < gridWidth && gridY >= 0 && gridY <= gridHeight) {
+        	addVertex(gridX, gridY);
+    		}
+    }
+    	
+    function undoPoint()
+    {
+        undoVertex();
+        updateTable();
+    }
+    
+    function setUpCanvas()
+    {
+        window.canvas = document.getElementById('canvas');
+    	window.ctx = canvas.getContext('2d');
+    	window.vertices = [];
+    	window.cellSize = 20;
+    	window.gridWidth = 50;
+    	window.gridHeight = 40;
+    	window.offsetX = 30; // Space for Y-axis numbers
+    	window.offsetY = 30; // Additional space for X-axis numbers at the bottom
+    	window.canvasHeight = canvas.height - offsetY; // Adjust for bottom X-axis numbers 
+    	canvas.addEventListener('click', canvasClick);
+        document.getElementById('undo').addEventListener('click', undoPoint);
+        document.getElementById('save').addEventListener('click', saveVertices);
+        draw();  
+    }
+
+    function draw() 
+    {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGridLines();
+        drawAxisNumbers();
+        drawLines();
+        drawVertices();
+    }
+       
+  
+
+ function updateTable() {
+        const tableBody = document.getElementById('verticesTable').getElementsByTagName('tbody')[0];
+        // Clear existing table rows
+        while (tableBody.firstChild) {
+            tableBody.removeChild(tableBody.firstChild);
+        }
+        // Add new rows for each vertex with a speed input
+        vertices.forEach((vertex, index) => {
+            let row = tableBody.insertRow();
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            let cell4 = row.insertCell(3); // Cell for speed input
+            cell1.textContent = index + 1;
+            cell2.textContent = vertex.x;
+            cell3.textContent = vertex.y;
+            // Add an input field for speed
+            cell4.innerHTML = `<input type="number" value="${vertex.speed}" onchange="updateSpeed(this.value, ${index})">`;
+        });
+    }
+    
+        // Function to update speed value in the vertices array
+    function updateSpeed(value, index) {
+        if (index >= 0 && index < vertices.length) {
+            vertices[index].speed = value;
+        }
+    }
+    
+    window.updateSpeed = updateSpeed;
+    
 
 </script>
 
@@ -536,6 +685,25 @@ y:
   </tr>
  
 </table>
+
+<br><br><hr>
+
+<canvas id="canvas" width="1020" height="820"></canvas>
+<button id="undo">Undo</button>
+<table id="verticesTable">
+    <thead>
+        <tr>
+            <th>Point #</th>
+            <th>X</th>
+            <th>Y</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<button id="save">Save</button>
+
+
 
 <br><br><hr>
 
